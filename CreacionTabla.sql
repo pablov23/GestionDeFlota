@@ -29,18 +29,49 @@ CREATE TABLE [ABAN_DER_ADOS].Ciudad(
 
 
 CREATE TABLE [ABAN_DER_ADOS].TipoTarea(
+				idTipoTarea nvarchar(50) NOT NULL,
+				descripcion nvarchar(50),
+				CONSTRAIN PK_TIPOTAREA PRIMARY KEY(idTipoTarea)
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Tarea(
+				codTarea nvarchar(50) NOT NULL,
+				tipoTarea nvarchar(50) NOT NULL,
+				nombre nvarchar(50),
+				descripcion nvarchar(50),
+				tiempoTarea int,
+				CONSTRAIN PK_TAREA PRIMARY KEY(codTarea),
+				CONSTRAIN FK_TAREA FOREING KEY(tipoTarea) REFERENCES TipoTarea(idTipoTarea)
+	
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Material(
+				idMaterial nvarchar(50) NOT NULL,
+				nombre nvarchar(50),
+				precio int
+				CONSTRAIN PK_MATERIAL PRIMARY KEY(idMaterial)
 )
 
 CREATE TABLE [ABAN_DER_ADOS].MaterialxTarea(
+				idMaterial nvarchar(50) NOT NULL,
+				codTarea nvarchar(50) NOT NULL,
+				cantidad int,
+				CONSTRAIN FK_MATERIALXTAREA FOREING KEY(idMaterial) REFERENCES Material(idMaterial),
+				CONSTRAIN FK_MATERIALXTAREA FOREING KEY(codTarea) REFERENCES Tarea(codTarea)
+				
 )
 
 CREATE TABLE [ABAN_DER_ADOS].TareaxOrden(
+				idOrdenTrabajo int Identity(1,1) NOT NULL,
+				codTarea nvarchar(50) NOT NULL,
+				legajoMecanico int,
+				duracionEstimada int,
+				fechaInicio DATE,
+				fechaFin DATE,
+				duracionReal int,
+				CONSTRAIN FK_TAREAXORDEN FOREING KEY(idOrdenTrabajo) REFERENCES OrdenTrabajo(orden_cod),
+				CONSTRAIN FK_TAREAXORDEN FOREING KEY(codTarea) REFERENCES Tarea(codTarea),
+				CONSTRAIN FK_TAREAXORDEN FOREING KEY(legajoMecanico) REFERENCES Mecanico(legajoMecanico),
 )
 
 CREATE TABLE [ABAN_DER_ADOS].EstadoOT(
