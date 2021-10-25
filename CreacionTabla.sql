@@ -64,7 +64,7 @@ CREATE TABLE [ABAN_DER_ADOS].MaterialxTarea(
 
 
 CREATE TABLE [ABAN_DER_ADOS].EstadoOT(
-				codEstado nvarchar(50) NOT NULL,
+				int Identity(1,1) NOT NULL,
 				descripcion nvarchar(50),
 				CONSTRAINT PK_ESTADO PRIMARY KEY(codEstado)
 				
@@ -134,6 +134,7 @@ CREATE TABLE [ABAN_DER_ADOS].OrdenTrabajo(
 				orden_cod int Identity(1,1) NOT NULL,
 				orden_fecha datetime2(3),
 				orden_patente_camion nvarchar(255) FOREIGN KEY REFERENCES [ABAN_DER_ADOS].[Camion](patenteCamion),
+				orde_estado FOREIGN KEY REFERENCES [ABAN_DER_ADOS].[EstadoOT](codEstado),
 				CONSTRAINT PK_OT PRIMARY KEY(orden_cod)
 )
 
@@ -203,6 +204,33 @@ CREATE TABLE [ABAN_DER_ADOS].PaquetexViaje(
 				CONSTRAINT FK_idViaje FOREIGN KEY(idViaje) REFERENCES [ABAN_DER_ADOS].[Viaje](idViaje)
 )
 
+----------Migracion EstadoOT--------------------------------------------------
+
+INSERT INTO [ABAN_DER_ADOS].[EstadoOT](
+		descripcion
+)
+SELECT DISTINCT[ORDEN_TRABAJO_ESTADO]
+FROM gd_esquema.Maestra 
+WHERE  TAREA_CODIGO is not null
+GO
+
+----------Migracion Chofer--------------------------------------------------
+
+INSERT INTO [ABAN_DER_ADOS].[Chofer](
+		chof_leg,
+		chof_nombre,
+		chof_apellido,
+		chof_dni,
+		chof_dire,
+		chof_mail,
+		chof_telef,
+		chof_fecha_nacimiento,
+		chof_costo_hora
+)
+SELECT DISTINCT CHOFER_NRO_LEGAJO, CHOFER_NOMBRE, CHOFER_APELLIDO, CHOFER_DNI, CHOFER_DIRECCION, CHOFER_MAIL, CHOFER_TELEFONO, CHOFER_FECHA_NAC, CHOFER_COSTO_HORA
+FROM gd_esquema.Maestra
+WHERE  CHOFER_NRO_LEGAJO is not null 
+GO
 
 
 
