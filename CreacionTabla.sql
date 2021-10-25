@@ -17,7 +17,6 @@ CREATE TABLE [ABAN_DER_ADOS].Chofer(
 				chof_fecha_nacimiento datetime2(3),
 				chof_costo_hora decimal(18,0),
 				CONSTRAINT PK_CHOFER PRIMARY KEY(chof_leg)
-
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Ciudad(
