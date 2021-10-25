@@ -21,7 +21,7 @@ CREATE TABLE [ABAN_DER_ADOS].Chofer(
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Ciudad(
-				codCiudad nvarchar(50) NOT NULL,
+				codCiudad int identity(1,1) NOT NULL,
 				ciudadNombre nvarchar(255),
 				CONSTRAINT PK_ciudad PRIMARY KEY(codCiudad)
 
@@ -71,9 +71,9 @@ CREATE TABLE [ABAN_DER_ADOS].EstadoOT(
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Taller(
-				idTaller nvarchar(50) NOT NULL,
+				idTaller int identity(1,1) NOT NULL,
 				nombre nvarchar(50),
-				codCiudad nvarchar(50) NOT NULL,
+				codCiudad int NOT NULL,
 				direccion nvarchar(50),
 				telefono int,
 				mail nvarchar(255),
@@ -84,7 +84,7 @@ CREATE TABLE [ABAN_DER_ADOS].Taller(
 
 CREATE TABLE [ABAN_DER_ADOS].Mecanico(
 				legajoMecanico int NOT NULL,
-				idTaller nvarchar(50) NOT NULL,
+				idTaller int NOT NULL,
 				nombre nvarchar(50), 
 				apellido nvarchar(50), 
 				DNI int NOT NULL,
@@ -100,16 +100,16 @@ CREATE TABLE [ABAN_DER_ADOS].Mecanico(
 
 
 CREATE TABLE [ABAN_DER_ADOS].Marca(
-				idMarca nvarchar(50) NOT NULL,
+				idMarca int identity(1,1) NOT NULL,
 				descripcion nvarchar(50),
 				CONSTRAINT PK_MARCA PRIMARY KEY(idMarca),
 				
 )
 
 CREATE TABLE [ABAN_DER_ADOS].ModeloCamion(
-				idModelo nvarchar(50) NOT NULL,
+				idModelo int identity(1,1) NOT NULL,
 				descripcion nvarchar(50),
-				idMarca nvarchar(50) NOT NULL,
+				idMarca int NOT NULL,
 				capacidadCarga int,
 				capidadTanque int,
 				velocidadMax int,
@@ -118,9 +118,9 @@ CREATE TABLE [ABAN_DER_ADOS].ModeloCamion(
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Camion(
-				patenteCamion nvarchar(7) NOT NULL,
-				idModelo nvarchar(50) NOT NULL,
-				marca nvarchar(50) NOT NULL,
+				patenteCamion nvarchar(255) NOT NULL,
+				idModelo int NOT NULL,
+				marca int NOT NULL,
 				fechaAlta DATE,
 				nroMotor int,
 				nroChasis int,
@@ -133,7 +133,7 @@ CREATE TABLE [ABAN_DER_ADOS].Camion(
 CREATE TABLE [ABAN_DER_ADOS].OrdenTrabajo(
 				orden_cod int Identity(1,1) NOT NULL,
 				orden_fecha datetime2(3),
-				orden_patente_camion nvarchar(7) FOREIGN KEY REFERENCES [ABAN_DER_ADOS].[Camion](patenteCamion),
+				orden_patente_camion nvarchar(255) FOREIGN KEY REFERENCES [ABAN_DER_ADOS].[Camion](patenteCamion),
 				CONSTRAINT PK_OT PRIMARY KEY(orden_cod)
 )
 
@@ -171,8 +171,8 @@ CREATE TABLE [ABAN_DER_ADOS].Paquete(
 
 CREATE TABLE [ABAN_DER_ADOS].Recorrido(
 				idRecorrido nvarchar(50) NOT NULL,
-				origen nvarchar(50),
-				destino nvarchar(50),
+				origen int not null,
+				destino int not null,
 				cantKm int,
 				precio int
 				CONSTRAINT PK_idRecorrido PRIMARY KEY(idRecorrido),
@@ -181,7 +181,7 @@ CREATE TABLE [ABAN_DER_ADOS].Recorrido(
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Viaje(
-				idViaje int NOT NULL,
+				idViaje int identity(1,1) NOT NULL,
 				legajoChofer int,
 				patenteCamion nvarchar(255),
 				idRecorrido nvarchar(50),
