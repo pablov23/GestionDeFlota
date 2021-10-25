@@ -21,9 +21,9 @@ CREATE TABLE [ABAN_DER_ADOS].Chofer(
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Ciudad(
-				ciudad_cod nvarchar(50) NOT NULL,
-				ciudad_nombre nvarchar(255),
-				CONSTRAINT PK_CHOFER PRIMARY KEY(ciudad_cod)
+				codCiudad nvarchar(50) NOT NULL,
+				ciudadNombre nvarchar(255),
+				CONSTRAINT PK_ciudad PRIMARY KEY(codCiudad)
 
 )
 
@@ -31,7 +31,7 @@ CREATE TABLE [ABAN_DER_ADOS].Ciudad(
 CREATE TABLE [ABAN_DER_ADOS].TipoTarea(
 				idTipoTarea nvarchar(50) NOT NULL,
 				descripcion nvarchar(50),
-				CONSTRAIN PK_TIPOTAREA PRIMARY KEY(idTipoTarea)
+				CONSTRAINT PK_TIPOTAREA PRIMARY KEY(idTipoTarea)
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Tarea(
@@ -40,8 +40,8 @@ CREATE TABLE [ABAN_DER_ADOS].Tarea(
 				nombre nvarchar(50),
 				descripcion nvarchar(50),
 				tiempoTarea int,
-				CONSTRAIN PK_TAREA PRIMARY KEY(codTarea),
-				CONSTRAIN FK_TAREA FOREING KEY(tipoTarea) REFERENCES TipoTarea(idTipoTarea)
+				CONSTRAINT PK_tarea PRIMARY KEY(codTarea),
+				CONSTRAINT FK_idTipoTarea FOREIGN KEY(tipoTarea) REFERENCES [ABAN_DER_ADOS].TipoTarea(idTipoTarea)
 	
 )
 
@@ -49,15 +49,15 @@ CREATE TABLE [ABAN_DER_ADOS].Material(
 				idMaterial nvarchar(50) NOT NULL,
 				nombre nvarchar(50),
 				precio int
-				CONSTRAIN PK_MATERIAL PRIMARY KEY(idMaterial)
+				CONSTRAINT PK_MATERIAL PRIMARY KEY(idMaterial)
 )
 
 CREATE TABLE [ABAN_DER_ADOS].MaterialxTarea(
 				idMaterial nvarchar(50) NOT NULL,
 				codTarea nvarchar(50) NOT NULL,
 				cantidad int,
-				CONSTRAIN FK_MATERIALXTAREA FOREING KEY(idMaterial) REFERENCES Material(idMaterial),
-				CONSTRAIN FK_MATERIALXTAREA FOREING KEY(codTarea) REFERENCES Tarea(codTarea)
+				CONSTRAINT FK_idMaterial FOREIGN KEY(idMaterial) REFERENCES Material(idMaterial),
+				CONSTRAINT FK_codTarea FOREIGN KEY(codTarea) REFERENCES Tarea(codTarea)
 				
 )
 
@@ -69,15 +69,15 @@ CREATE TABLE [ABAN_DER_ADOS].TareaxOrden(
 				fechaInicio DATE,
 				fechaFin DATE,
 				duracionReal int,
-				CONSTRAIN FK_TAREAXORDEN FOREING KEY(idOrdenTrabajo) REFERENCES OrdenTrabajo(orden_cod),
-				CONSTRAIN FK_TAREAXORDEN FOREING KEY(codTarea) REFERENCES Tarea(codTarea),
-				CONSTRAIN FK_TAREAXORDEN FOREING KEY(legajoMecanico) REFERENCES Mecanico(legajoMecanico),
+				CONSTRAINT FK_idOrdenTrabajo FOREIGN KEY(idOrdenTrabajo) REFERENCES OrdenTrabajo(orden_cod),
+				CONSTRAINT FK_codTarea FOREIGN KEY(codTarea) REFERENCES Tarea(codTarea),
+				CONSTRAINT FK_legajoMecanico FOREIGN KEY(legajoMecanico) REFERENCES Mecanico(legajoMecanico),
 )
 
 CREATE TABLE [ABAN_DER_ADOS].EstadoOT(
 				codEstado nvarchar(50) NOT NULL,
 				descripcion nvarchar(50),
-				CONSTRAIN PK_ESTADO PRIMARY KEY(codEstado)
+				CONSTRAINT PK_ESTADO PRIMARY KEY(codEstado)
 				
 )
 
@@ -88,6 +88,18 @@ CREATE TABLE [ABAN_DER_ADOS].OrdenTrabajo(
 				CONSTRAINT PK_OT PRIMARY KEY(orden_cod)
 
 
+)
+
+CREATE TABLE [ABAN_DER_ADOS].Taller(
+				idTaller nvarchar(50) NOT NULL,
+				nombre nvarchar(50),
+				codCiudad nvarchar(50) NOT NULL,
+				direccion nvarchar(50),
+				telefono int,
+				mail nvarchar(255),
+				CONSTRAINT PK_TALLER PRIMARY KEY(idTaller),
+				CONSTRAINT FK_codCiudad FOREIGN KEY(codCiudad) REFERENCES Ciudad(codCiudad)
+				
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Mecanico(
@@ -102,20 +114,10 @@ CREATE TABLE [ABAN_DER_ADOS].Mecanico(
 				telefono int,
 				costoHora int
 				CONSTRAINT PK_MECANICO PRIMARY KEY(legajoMecanico),
-				CONSTRAINT FK_MECANICO FOREING KEY(idTaller) REFERENCES Taller(idTaller)
+				CONSTRAINT FK_idTaller FOREIGN KEY(idTaller) REFERENCES Taller(idTaller)
 )
 
-CREATE TABLE [ABAN_DER_ADOS].Taller(
-				idTaller nvarchar(50) NOT NULL,
-				nombre nvarchar(50),
-				cod_cuidad nvarchar(50) NOT NULL,
-				direccion nvarhar(50),
-				telefono int,
-				mail nvarchar(255)
-				CONSTRAINT PK_TALLER PRIMARY KEY(idTaller),
-				CONSTRAINT FK_TALLER FOREING KEY(codCuidad) REFERENCES Cuidad(codCuidad)
-				
-)
+
 
 CREATE TABLE [ABAN_DER_ADOS].Marca(
 				idMarca nvarchar(50) NOT NULL,
@@ -132,7 +134,7 @@ CREATE TABLE [ABAN_DER_ADOS].ModeloCamion(
 				capidadTanque int,
 				velocidadMax int,
 				CONSTRAINT PK_MODELOCAMION PRIMARY KEY(idModelo),
-				CONSTRAINT FK_MODELOCAMION FOREING KEY(idMarca) REFERENCES Marca(idMarca)
+				CONSTRAINT FK_idMarca FOREIGN KEY(idMarca) REFERENCES Marca(idMarca)
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Camion(
@@ -142,10 +144,10 @@ CREATE TABLE [ABAN_DER_ADOS].Camion(
 				fechaAlta DATE,
 				nroMotor int,
 				nroChasis int,
-				patente int,   (- ojo con esto -)
+				patente int,   -- (- ojo con esto -)
 				CONSTRAINT PK_CAMION PRIMARY KEY(patenteCamion),
-				CONSTRAINT FK_CAMION FOREING KEY(idModelo) REFERENCES Modelo(idModelo)
-				CONSTRAINT FK_CAMION FOREING KEY(marca) REFERENCES Marca(idMarca)				
+				CONSTRAINT FK_idModelo FOREIGN KEY(idModelo) REFERENCES Modelo(idModelo),
+				CONSTRAINT FK_idMarca FOREIGN KEY(marca) REFERENCES Marca(idMarca)				
 )
 
 CREATE TABLE [ABAN_DER_ADOS].TipoPaquete(
@@ -164,39 +166,39 @@ CREATE TABLE [ABAN_DER_ADOS].Paquete(
 				tipoPaquete nvarchar(50) NOT NULL,
 				descripcion nvarchar(50),
 				CONSTRAINT PK_PAQUETE PRIMARY KEY(idPaquete),
-				CONSTRAINT FK_PAQUETE FOREING KEY(tipoPaquete) REFERENCES TipoPaquete(idTipo)
+				CONSTRAINT FK_tipoPaquete FOREIGN KEY(tipoPaquete) REFERENCES TipoPaquete(idTipo)
 )
 
 CREATE TABLE [ABAN_DER_ADOS].PaquetexViaje(
-				idPaquete nvarchar(50) NOT NULL,  (- ojo preguntar con esto -)
+				idPaquete nvarchar(50) NOT NULL,  --(- ojo preguntar con esto -)
 				idViaje nvarchar(50) NOT NULL, 
 				cantidad int,
-				CONSTRAINT FK_PAQUETEXVIAJE FOREING KEY(idPaquete) REFERENCES Paquete(idPaquete) ,
-				CONSTRAINT FK_PAQUETEXVIAJE FOREING KEY(idViaje) REFERENCES Viaje(idViaje)
+				CONSTRAINT FK_idPaquete FOREIGN KEY(idPaquete) REFERENCES Paquete(idPaquete) ,
+				CONSTRAINT FK_idViaje FOREIGN KEY(idViaje) REFERENCES Viaje(idViaje)
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Viaje(
 				idViaje nvarchar(50) NOT NULL,
-				legajoChofer int 
+				legajoChofer int,
 				patenteCamion nvarchar(7),
 				idRecorrido nvarchar(50),
 				fechaInicio DATE,
 				fechaFin DATE,
 				litrosCombustible int,
-				CONSTRAINT FK_VIAJE FOREING KEY(legajoChofer) REFERENCES Chofer(legajoChofer) 
-				CONSTRAINT FK_VIAJE FOREING KEY(patenteCamion) REFERENCES Camion(patenteCamion) 
-				CONSTRAINT FK_VIAJE FOREING KEY(idRecorrido) REFERENCES Recorrido(idRecorrido) 
+				CONSTRAINT FK_legajoChofer FOREIGN KEY(legajoChofer) REFERENCES Chofer(legajoChofer), 
+				CONSTRAINT FK_patenteCamion FOREIGN KEY(patenteCamion) REFERENCES Camion(patenteCamion), 
+				CONSTRAINT FK_idRecorrido FOREIGN KEY(idRecorrido) REFERENCES Recorrido(idRecorrido) 
 	
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Recorrido(
 				idRecorrido nvarchar(50) NOT NULL,
 				origen nvarchar(50),
-				destino nvarcvhar(50),
-				cantKm int
+				destino nvarchar(50),
+				cantKm int,
 				precio int
-				CONSTRAINT FK_RECORRIDO FOREING KEY(origen) REFERENCES Ciudad(ciudad_cod), 
-				CONSTRAINT FK_RECORRIDO FOREING KEY(destino) REFERENCES Ciudad(ciudad_cod) 
+				CONSTRAINT FK_origen FOREIGN KEY(origen) REFERENCES Ciudad(ciudad_cod), 
+				CONSTRAINT FK_destino FOREIGN KEY(destino) REFERENCES Ciudad(ciudad_cod) 
 )
 
 
