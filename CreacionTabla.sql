@@ -29,15 +29,14 @@ CREATE TABLE [ABAN_DER_ADOS].Ciudad(
 
 
 CREATE TABLE [ABAN_DER_ADOS].TipoTarea(
-				idTipoTarea nvarchar(50) NOT NULL,
+				idTipoTarea int Identity(1,1) NOT NULL,
 				descripcion nvarchar(50),
 				CONSTRAINT PK_TIPOTAREA PRIMARY KEY(idTipoTarea)
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Tarea(
 				codTarea nvarchar(50) NOT NULL,
-				tipoTarea nvarchar(50) NOT NULL,
-				nombre nvarchar(50),
+				tipoTarea int NOT NULL,
 				descripcion nvarchar(50),
 				tiempoTarea int,
 				CONSTRAINT PK_tarea PRIMARY KEY(codTarea),
@@ -253,7 +252,6 @@ GO
 
 -----------Migracion Material-------------------------------------------------------
 
-USE GD2C2021
 INSERT INTO [ABAN_DER_ADOS].[Material](
 		codMaterial,
 		descripcion,
@@ -262,4 +260,29 @@ INSERT INTO [ABAN_DER_ADOS].[Material](
 SELECT distinct MATERIAL_COD,MATERIAL_DESCRIPCION,MATERIAL_PRECIO from gd_esquema.Maestra 
 where MATERIAL_COD is not null
 
+----------Migracion Tipo Tarea-------------------------------------------------------
 
+INSERT INTO [ABAN_DER_ADOS].[TipoTarea](
+				descripcion
+)
+select distinct TIPO_TAREA from gd_esquema.Maestra
+where TIPO_TAREA is not null
+
+----------Migracion Tarea -------------------------------------------------------
+
+INSERT INTO [ABAN_DER_ADOS].Tarea(
+				codTarea,
+				tipoTarea,
+				descripcion,
+				tiempoTarea
+)
+
+SELECT DISTINCT maestra.[TAREA_CODIGO], 
+			TipoTarea.[idTipoTarea], 
+			maestra.[TAREA_DESCRIPCION], 
+			maestra.[TAREA_TIEMPO_ESTIMADO]
+from gd_esquema.Maestra maestra
+JOIN [ABAN_DER_ADOS].[TipoTarea] TipoTarea
+ON [TIPO_TAREA] = descripcion
+WHERE TAREA_CODIGO is not null
+GO
