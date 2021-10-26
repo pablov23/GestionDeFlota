@@ -115,14 +115,14 @@ CREATE TABLE [ABAN_DER_ADOS].ModeloCamion(
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Camion(
+				idCamion int identity(1,1),
 				patenteCamion nvarchar(255) NOT NULL,
 				idModelo int NOT NULL,
 				marca int NOT NULL,
 				fechaAlta DATE,
-				nroMotor int,
-				nroChasis int,
-				patente int,   -- (- ojo con esto -)
-				CONSTRAINT PK_CAMION PRIMARY KEY(patenteCamion),
+				nroMotor nvarchar(255),
+				nroChasis nvarchar(255),
+				CONSTRAINT PK_CAMION PRIMARY KEY(idCamion),
 				CONSTRAINT FK_idModelo FOREIGN KEY(idModelo) REFERENCES [ABAN_DER_ADOS].[ModeloCamion](idModelo),
 				CONSTRAINT FK_idMarcaCamin FOREIGN KEY(marca) REFERENCES [ABAN_DER_ADOS].[Marca](idMarca)				
 )
@@ -130,7 +130,7 @@ CREATE TABLE [ABAN_DER_ADOS].Camion(
 CREATE TABLE [ABAN_DER_ADOS].OrdenTrabajo(
 				orden_cod int Identity(1,1) NOT NULL,
 				orden_fecha datetime2(3),
-				orden_patente_camion nvarchar(255) FOREIGN KEY REFERENCES [ABAN_DER_ADOS].[Camion](patenteCamion),
+				orden_patente_camion int FOREIGN KEY REFERENCES [ABAN_DER_ADOS].[Camion](idCamion),
 				orde_estado int FOREIGN KEY REFERENCES [ABAN_DER_ADOS].[EstadoOT](codEstado),
 				CONSTRAINT PK_OT PRIMARY KEY(orden_cod)
 )
@@ -181,14 +181,14 @@ CREATE TABLE [ABAN_DER_ADOS].Recorrido(
 CREATE TABLE [ABAN_DER_ADOS].Viaje(
 				idViaje int identity(1,1) NOT NULL,
 				legajoChofer int,
-				patenteCamion nvarchar(255),
+				idCamion int,
 				idRecorrido int,
 				fechaInicio DATE,
 				fechaFin DATE,
 				litrosCombustible int,
 				CONSTRAINT PK_idViaje PRIMARY KEY(idViaje),
 				CONSTRAINT FK_legajoChofer FOREIGN KEY(legajoChofer) REFERENCES [ABAN_DER_ADOS].[Chofer](chof_leg), 
-				CONSTRAINT FK_patenteCamion FOREIGN KEY(patenteCamion) REFERENCES [ABAN_DER_ADOS].[Camion](patenteCamion), 
+				CONSTRAINT FK_patenteCamion FOREIGN KEY(idCamion) REFERENCES [ABAN_DER_ADOS].[Camion](idCamion), 
 				CONSTRAINT FK_idRecorrido FOREIGN KEY(idRecorrido) REFERENCES [ABAN_DER_ADOS].[Recorrido](idRecorrido) 
 	
 )
@@ -379,9 +379,9 @@ INSERT INTO [ABAN_DER_ADOS].[ModeloCamion](
 SELECT DISTINCT MODELO_CAMION,MODELO_CAPACIDAD_CARGA,MODELO_CAPACIDAD_TANQUE,MODELO_VELOCIDAD_MAX
 FROM gd_esquema.Maestra
 WHERE MODELO_CAMION is not null
+ORDER BY 1
 
 ----------Migracion Camion-----------------------------------------------
-
 INSERT INTO [ABAN_DER_ADOS].[Camion](
 				patenteCamion,
 				idModelo,
@@ -393,14 +393,16 @@ INSERT INTO [ABAN_DER_ADOS].[Camion](
 )
 
 SELECT DISTINCT maestra.[CAMION_PATENTE], [modelo].idModelo, marca.[idMarca], maestra.[CAMION_FECHA_ALTA],maestra.[CAMION_NRO_MOTOR],maestra.[CAMION_NRO_CHASIS]
-
 from gd_esquema.Maestra maestra
 JOIN [ABAN_DER_ADOS].[ModeloCamion] modelo
 ON [MODELO_CAMION] = [modelo].descripcion
 JOIN [ABAN_DER_ADOS].[Marca] marca
 ON [MARCA_CAMION_MARCA] = [marca].descripcion
 WHERE CAMION_PATENTE is not null
+order by 1
+
 GO
+
 
 ----------Migracion Recorrido-----------------------------------------------
 
@@ -418,3 +420,29 @@ ON [RECORRIDO_CIUDAD_ORIGEN] = [ciudad1].ciudadNombre
 JOIN [ABAN_DER_ADOS].[Ciudad] ciudad2
 ON [RECORRIDO_CIUDAD_DESTINO] = [ciudad2].ciudadNombre
 GO
+----------Migracion Viaje-----------------------------------------------
+INSERT INTO [ABAN_DER_ADOS].Viaje(
+				legajoChofer,idCamion,fechaInicio,fechaFin,litrosCombustible,idRecorrido
+				
+				
+				
+)
+SELECT DISTINCT CHOFER_NRO_LEGAJO,camion.idCamion ,VIAJE_FECHA_INICIO,VIAJE_FECHA_FIN,VIAJE_CONSUMO_COMBUSTIBLE,recorrido.idRecorrido FROM gd_esquema.Maestra
+JOIN ABAN_DER_ADOS.Chofer chofer ON (CHOFER_NRO_LEGAJO = chofer.chof_leg)
+JOIN ABAN_DER_ADOS.Camion camion ON (CAMION_PATENTE = camion.patenteCamion)
+JOIN ABAN_DER_ADOS.Ciudad co ON (RECORRIDO_CIUDAD_ORIGEN = co.ciudadNombre)
+JOIN ABAN_DER_ADOS.Ciudad cd ON (RECORRIDO_CIUDAD_DESTINO = cd.ciudadNombre)
+JOIN ABAN_DER_ADOS.Recorrido recorrido ON (co.codCiudad = recorrido.origen and cd.codCiudad = recorrido.destino and recorrido.cantKm = RECORRIDO_KM)
+WHERE VIAJE_FECHA_INICIO is not null
+
+----------Migracion Orden Trabajo-----------------------------------------------
+INSERT INTO [ABAN_DER_ADOS].OrdenTrabajo(
+				orden_patente_camion,orde_estado,orden_fecha
+				
+)
+SELECT DISTINCT camion.idCamion, eot.codEstado ,ORDEN_TRABAJO_FECHA FROM gd_esquema.Maestra
+JOIN ABAN_DER_ADOS.EstadoOT eot on (eot.descripcion = ORDEN_TRABAJO_ESTADO)
+JOIN ABAN_DER_ADOS.Camion camion ON (CAMION_PATENTE = camion.patenteCamion)
+WHERE ORDEN_TRABAJO_FECHA is not null
+
+----------Migracion Orden Trabajo-----------------------------------------------
