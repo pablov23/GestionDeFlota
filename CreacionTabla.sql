@@ -402,3 +402,20 @@ JOIN [ABAN_DER_ADOS].[Marca] marca
 ON [MARCA_CAMION_MARCA] = [marca].descripcion
 WHERE CAMION_PATENTE is not null
 GO
+
+----------Migracion Recorrido-----------------------------------------------
+
+INSERT INTO [ABAN_DER_ADOS].Recorrido(
+				origen,
+				destino,
+				cantKm,
+				precio
+)
+SELECT DISTINCT ciudad1.[codCiudad],ciudad2.[codCiudad], maestra.[RECORRIDO_KM], maestra.[RECORRIDO_PRECIO]
+
+from gd_esquema.Maestra maestra
+JOIN [ABAN_DER_ADOS].[Ciudad] ciudad1
+ON [RECORRIDO_CIUDAD_DESTINO] = [ciudad1].ciudadNombre
+JOIN [ABAN_DER_ADOS].[Ciudad] ciudad2
+ON [RECORRIDO_CIUDAD_DESTINO] = [ciudad2].ciudadNombre
+GO
