@@ -236,7 +236,7 @@ GO
 ----------Migracion Ciudad--------------------------------------------------
 
 INSERT INTO [ABAN_DER_ADOS].[Ciudad](
-				ciudadNombre
+		ciudadNombre
 )
 
 (SELECT DISTINCT RECORRIDO_CIUDAD_DESTINO  AS Ciudad FROM gd_esquema.Maestra 
@@ -250,5 +250,16 @@ WHERE TALLER_CIUDAD is not null)
 
 GO
 
+
+-----------Migracion Material-------------------------------------------------------
+
+USE GD2C2021
+INSERT INTO [ABAN_DER_ADOS].[Material](
+		codMaterial,
+		descripcion,
+		precio
+)
+SELECT distinct MATERIAL_COD,MATERIAL_DESCRIPCION,MATERIAL_PRECIO from gd_esquema.Maestra 
+where MATERIAL_COD is not null
 
 
