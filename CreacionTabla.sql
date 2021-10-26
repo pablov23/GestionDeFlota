@@ -358,3 +358,14 @@ INSERT INTO [ABAN_DER_ADOS].[TipoPaquete](
 SELECT DISTINCT [PAQUETE_PESO_MAX], [PAQUETE_ALTO_MAX], [PAQUETE_ANCHO_MAX], [PAQUETE_LARGO_MAX], [PAQUETE_DESCRIPCION],[PAQUETE_PRECIO]
 FROM gd_esquema.Maestra
 WHERE PAQUETE_DESCRIPCION is not null
+
+
+----------Migracion Marca-----------------------------------------------
+
+INSERT INTO [ABAN_DER_ADOS].[Marca](
+			descripcion
+)
+
+SELECT DISTINCT [MARCA_CAMION_MARCA]
+FROM gd_esquema.Maestra
+WHERE MARCA_CAMION_MARCA is not null
