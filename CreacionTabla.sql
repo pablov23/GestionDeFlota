@@ -380,3 +380,25 @@ INSERT INTO [ABAN_DER_ADOS].[ModeloCamion](
 SELECT DISTINCT MODELO_CAMION,MODELO_CAPACIDAD_CARGA,MODELO_CAPACIDAD_TANQUE,MODELO_VELOCIDAD_MAX
 FROM gd_esquema.Maestra
 WHERE MODELO_CAMION is not null
+
+----------Migracion Camion-----------------------------------------------
+
+INSERT INTO [ABAN_DER_ADOS].[Camion](
+				patenteCamion,
+				idModelo,
+				marca,
+				fechaAlta,
+				nroMotor,
+				nroChasis
+
+)
+
+SELECT DISTINCT maestra.[CAMION_PATENTE], [modelo].idModelo, marca.[idMarca], maestra.[CAMION_FECHA_ALTA],maestra.[CAMION_NRO_MOTOR],maestra.[CAMION_NRO_CHASIS]
+
+from gd_esquema.Maestra maestra
+JOIN [ABAN_DER_ADOS].[ModeloCamion] modelo
+ON [MODELO_CAMION] = [modelo].descripcion
+JOIN [ABAN_DER_ADOS].[Marca] marca
+ON [MARCA_CAMION_MARCA] = [marca].descripcion
+WHERE CAMION_PATENTE is not null
+GO
