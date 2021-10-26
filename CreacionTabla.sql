@@ -136,13 +136,14 @@ CREATE TABLE [ABAN_DER_ADOS].OrdenTrabajo(
 )
 
 CREATE TABLE [ABAN_DER_ADOS].TareaxOrden(
-				idOrdenTrabajo int Identity(1,1) NOT NULL,
+				idTareaxOrden int identity(1,1) not null,
+				idOrdenTrabajo int NOT NULL,
 				codTarea nvarchar(50) NOT NULL,
 				legajoMecanico int,
-				duracionEstimada int,
 				fechaInicio DATE,
 				fechaFin DATE,
 				duracionReal int,
+				CONSTRAINT PK_idTareaXOrden PRIMARY KEY(idTareaxOrden),
 				CONSTRAINT FK_idOrdenTrabajo FOREIGN KEY(idOrdenTrabajo) REFERENCES [ABAN_DER_ADOS].[OrdenTrabajo](orden_cod),
 				CONSTRAINT FK_codTareaOrden FOREIGN KEY(codTarea) REFERENCES [ABAN_DER_ADOS].[Tarea](codTarea),
 				CONSTRAINT FK_legajoMecanicoOrden FOREIGN KEY(legajoMecanico) REFERENCES [ABAN_DER_ADOS].[Mecanico](legajoMecanico),
@@ -445,4 +446,39 @@ JOIN ABAN_DER_ADOS.EstadoOT eot on (eot.descripcion = ORDEN_TRABAJO_ESTADO)
 JOIN ABAN_DER_ADOS.Camion camion ON (CAMION_PATENTE = camion.patenteCamion)
 WHERE ORDEN_TRABAJO_FECHA is not null
 
-----------Migracion Orden Trabajo-----------------------------------------------
+----------Migracion TareaXOrden-----------------------------------------------
+/*Terminar!*/
+INSERT INTO ABAN_DER_ADOS.TareaxOrden(
+	idOrdenTrabajo,legajoMecanico,codTarea,fechaInicio,fechaFin,duracionReal
+		
+)
+SELECT distinct ot.orden_cod,mec.legajoMecanico,tar.codTarea,TAREA_FECHA_INICIO, TAREA_FECHA_FIN, 0 as 'duracion real' FROM gd_esquema.Maestra
+JOIN ABAN_DER_ADOS.Mecanico mec on (mec.legajoMecanico = MECANICO_NRO_LEGAJO)
+JOIN ABAN_DER_ADOS.Tarea tar on (tar.codTarea = TAREA_CODIGO)
+JOIN ABAN_DER_ADOS.OrdenTrabajo ot on (ot.orden_fecha = ORDEN_TRABAJO_FECHA)
+WHERE ORDEN_TRABAJO_FECHA is not null
+
+
+--
+/*Terminar!*/
+SELECT MATERIAL_COD,count(TAREA_CODIGO),tar.idTareaxOrden FROM gd_esquema.Maestra
+JOIN ABAN_DER_ADOS.TareaxOrden tar on (tar.codTarea= TAREA_CODIGO)
+WHERE MATERIAL_COD is not null
+GROUP BY MATERIAL_COD,tar.idTareaxOrden
+
+/*
+CREATE PROCEDURE crear_tablas AS
+BEGIN 
+--schema
+END
+
+CREATE PROCEDURE migrar AS
+BEGIN 
+--migracion
+END
+
+go
+EXEC dbo.crear_tablas
+go
+EXEC dbo.migrar
+*/
