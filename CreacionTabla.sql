@@ -289,6 +289,7 @@ GO
 
 
 ----------Migracion Taller -------------------------------------------------------
+
 INSERT INTO [ABAN_DER_ADOS].[Taller](
 				nombre,
 				codCiudad,
@@ -306,7 +307,39 @@ SELECT DISTINCT maestra.[TALLER_NOMBRE],
 from gd_esquema.Maestra maestra
 JOIN [ABAN_DER_ADOS].[Ciudad] Ciudad
 ON [TALLER_CIUDAD] = ciudadNombre
-WHERE TAREA_CODIGO is not null
+WHERE TALLER_NOMBRE is not null
 ORDER BY TALLER_NOMBRE
+GO
+
+----------Migracion Mecanico -------------------------------------------------------
+
+INSERT INTO [ABAN_DER_ADOS].[Mecanico](
+				legajoMecanico,
+				idTaller,
+				nombre, 
+				apellido, 
+				DNI,
+				direccion,
+				mail,
+				fechaNac,
+				telefono,
+				costoHora
+
+)
+
+SELECT DISTINCT maestra.[MECANICO_NRO_LEGAJO], 
+			taller.[idTaller], 
+			maestra.[MECANICO_NOMBRE], 
+			maestra.[MECANICO_APELLIDO],
+			maestra.[MECANICO_DNI],
+			maestra.[MECANICO_DIRECCION],
+			maestra.[MECANICO_MAIL],
+			maestra.[MECANICO_FECHA_NAC],
+			maestra.[MECANICO_TELEFONO],
+			maestra.[MECANICO_COSTO_HORA]
+from gd_esquema.Maestra maestra
+JOIN [ABAN_DER_ADOS].[Taller] taller
+ON [TALLER_NOMBRE] = nombre
+WHERE MECANICO_NRO_LEGAJO is not null
 GO
 
