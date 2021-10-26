@@ -63,7 +63,7 @@ CREATE TABLE [ABAN_DER_ADOS].MaterialxTarea(
 
 
 CREATE TABLE [ABAN_DER_ADOS].EstadoOT(
-				int Identity(1,1) NOT NULL,
+				codEstado int Identity(1,1) NOT NULL,
 				descripcion nvarchar(50),
 				CONSTRAINT PK_ESTADO PRIMARY KEY(codEstado)
 				
@@ -131,7 +131,7 @@ CREATE TABLE [ABAN_DER_ADOS].OrdenTrabajo(
 				orden_cod int Identity(1,1) NOT NULL,
 				orden_fecha datetime2(3),
 				orden_patente_camion nvarchar(255) FOREIGN KEY REFERENCES [ABAN_DER_ADOS].[Camion](patenteCamion),
-				orde_estado FOREIGN KEY REFERENCES [ABAN_DER_ADOS].[EstadoOT](codEstado),
+				orde_estado int FOREIGN KEY REFERENCES [ABAN_DER_ADOS].[EstadoOT](codEstado),
 				CONSTRAINT PK_OT PRIMARY KEY(orden_cod)
 )
 
@@ -160,7 +160,7 @@ CREATE TABLE [ABAN_DER_ADOS].TipoPaquete(
 
 CREATE TABLE [ABAN_DER_ADOS].Paquete(
 				idPaquete nvarchar(50) NOT NULL,
-				tipoPaquete nvarchar(50) NOT NULL,
+				tipoPaquete int NOT NULL,
 				descripcion nvarchar(50),
 				CONSTRAINT PK_PAQUETE PRIMARY KEY(idPaquete),
 				CONSTRAINT FK_tipoPaquete FOREIGN KEY(tipoPaquete) REFERENCES [ABAN_DER_ADOS].[TipoPaquete](idTipo)
@@ -168,7 +168,7 @@ CREATE TABLE [ABAN_DER_ADOS].Paquete(
 
 
 CREATE TABLE [ABAN_DER_ADOS].Recorrido(
-				idRecorrido nvarchar(50) NOT NULL,
+				idRecorrido int identity(1,1) NOT NULL,
 				origen int not null,
 				destino int not null,
 				cantKm int,
@@ -182,7 +182,7 @@ CREATE TABLE [ABAN_DER_ADOS].Viaje(
 				idViaje int identity(1,1) NOT NULL,
 				legajoChofer int,
 				patenteCamion nvarchar(255),
-				idRecorrido nvarchar(50),
+				idRecorrido int,
 				fechaInicio DATE,
 				fechaFin DATE,
 				litrosCombustible int,
@@ -244,7 +244,6 @@ WHERE RECORRIDO_CIUDAD_ORIGEN is not null)
 UNION
 (SELECT DISTINCT TALLER_CIUDAD  AS Ciudad FROM gd_esquema.Maestra
 WHERE TALLER_CIUDAD is not null)
-
 GO
 
 
@@ -415,7 +414,7 @@ SELECT DISTINCT ciudad1.[codCiudad],ciudad2.[codCiudad], maestra.[RECORRIDO_KM],
 
 from gd_esquema.Maestra maestra
 JOIN [ABAN_DER_ADOS].[Ciudad] ciudad1
-ON [RECORRIDO_CIUDAD_DESTINO] = [ciudad1].ciudadNombre
+ON [RECORRIDO_CIUDAD_ORIGEN] = [ciudad1].ciudadNombre
 JOIN [ABAN_DER_ADOS].[Ciudad] ciudad2
 ON [RECORRIDO_CIUDAD_DESTINO] = [ciudad2].ciudadNombre
 GO
