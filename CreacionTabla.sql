@@ -150,7 +150,7 @@ CREATE TABLE [ABAN_DER_ADOS].TareaxOrden(
 				CONSTRAINT FK_legajoMecanicoOrden FOREIGN KEY(legajoMecanico) REFERENCES [ABAN_DER_ADOS].[Mecanico](legajoMecanico),
 )
 CREATE TABLE [ABAN_DER_ADOS].TipoPaquete(
-				idTipo nvarchar(50) NOT NULL,
+				idTipo int Identity(1,1) NOT NULL,
 				pesoMax int,
 				altoMax int,
 				anchoMax int,
@@ -343,3 +343,18 @@ ON [TALLER_NOMBRE] = nombre
 WHERE MECANICO_NRO_LEGAJO is not null
 GO
 
+
+----------Migracion TipoPaquete-----------------------------------------------
+
+INSERT INTO [ABAN_DER_ADOS].[TipoPaquete](
+				pesoMax,
+				altoMax,
+				anchoMax,
+				largoMax,
+				descripcion,
+				precio
+)
+
+SELECT DISTINCT [PAQUETE_PESO_MAX], [PAQUETE_ALTO_MAX], [PAQUETE_ANCHO_MAX], [PAQUETE_LARGO_MAX], [PAQUETE_DESCRIPCION],[PAQUETE_PRECIO]
+FROM gd_esquema.Maestra
+WHERE PAQUETE_DESCRIPCION is not null
