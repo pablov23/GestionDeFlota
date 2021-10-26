@@ -286,3 +286,27 @@ JOIN [ABAN_DER_ADOS].[TipoTarea] TipoTarea
 ON [TIPO_TAREA] = descripcion
 WHERE TAREA_CODIGO is not null
 GO
+
+
+----------Migracion Taller -------------------------------------------------------
+INSERT INTO [ABAN_DER_ADOS].[Taller](
+				nombre,
+				codCiudad,
+				direccion,
+				telefono,
+				mail
+
+)
+
+SELECT DISTINCT maestra.[TALLER_NOMBRE], 
+			Ciudad.[codCiudad], 
+			maestra.[TALLER_DIRECCION], 
+			maestra.[TALLER_TELEFONO],
+			maestra.[TALLER_MAIL]
+from gd_esquema.Maestra maestra
+JOIN [ABAN_DER_ADOS].[Ciudad] Ciudad
+ON [TALLER_CIUDAD] = ciudadNombre
+WHERE TAREA_CODIGO is not null
+ORDER BY TALLER_NOMBRE
+GO
+
