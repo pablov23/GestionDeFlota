@@ -233,5 +233,22 @@ WHERE  CHOFER_NRO_LEGAJO is not null
 GO
 
 
+----------Migracion Ciudad--------------------------------------------------
+
+INSERT INTO [ABAN_DER_ADOS].[Ciudad](
+				ciudadNombre
+)
+
+(SELECT DISTINCT RECORRIDO_CIUDAD_DESTINO  AS Ciudad FROM gd_esquema.Maestra 
+WHERE RECORRIDO_CIUDAD_DESTINO is not null)
+UNION
+(SELECT DISTINCT RECORRIDO_CIUDAD_ORIGEN  AS Ciudad FROM gd_esquema.Maestra
+WHERE RECORRIDO_CIUDAD_ORIGEN is not null)
+UNION
+(SELECT DISTINCT TALLER_CIUDAD  AS Ciudad FROM gd_esquema.Maestra
+WHERE TALLER_CIUDAD is not null)
+
+GO
+
 
 
