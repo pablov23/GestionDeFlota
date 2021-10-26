@@ -46,17 +46,17 @@ CREATE TABLE [ABAN_DER_ADOS].Tarea(
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Material(
-				idMaterial nvarchar(50) NOT NULL,
-				nombre nvarchar(50),
+				codMaterial nvarchar(50) NOT NULL,
+				descripcion nvarchar(50),
 				precio int
-				CONSTRAINT PK_MATERIAL PRIMARY KEY(idMaterial)
+				CONSTRAINT PK_MATERIAL PRIMARY KEY(codMaterial)
 )
 
 CREATE TABLE [ABAN_DER_ADOS].MaterialxTarea(
-				idMaterial nvarchar(50) NOT NULL,
+				codMaterial nvarchar(50) NOT NULL,
 				codTarea nvarchar(50) NOT NULL,
 				cantidad int,
-				CONSTRAINT FK_idMaterial FOREIGN KEY(idMaterial) REFERENCES [ABAN_DER_ADOS].[Material](idMaterial),
+				CONSTRAINT FK_codMaterial FOREIGN KEY(codMaterial) REFERENCES [ABAN_DER_ADOS].[Material](codMaterial),
 				CONSTRAINT FK_codTarea FOREIGN KEY(codTarea) REFERENCES [ABAN_DER_ADOS].[Tarea](codTarea)
 				
 )
