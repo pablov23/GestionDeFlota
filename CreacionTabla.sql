@@ -108,12 +108,10 @@ CREATE TABLE [ABAN_DER_ADOS].Marca(
 CREATE TABLE [ABAN_DER_ADOS].ModeloCamion(
 				idModelo int identity(1,1) NOT NULL,
 				descripcion nvarchar(50),
-				idMarca int NOT NULL,
 				capacidadCarga int,
 				capidadTanque int,
 				velocidadMax int,
 				CONSTRAINT PK_MODELOCAMION PRIMARY KEY(idModelo),
-				CONSTRAINT FK_idMarca FOREIGN KEY(idMarca) REFERENCES [ABAN_DER_ADOS].[Marca](idMarca)
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Camion(
@@ -369,3 +367,16 @@ INSERT INTO [ABAN_DER_ADOS].[Marca](
 SELECT DISTINCT [MARCA_CAMION_MARCA]
 FROM gd_esquema.Maestra
 WHERE MARCA_CAMION_MARCA is not null
+
+----------Migracion Modelo Camion-----------------------------------------------
+
+INSERT INTO [ABAN_DER_ADOS].[ModeloCamion](
+				descripcion,
+				capacidadCarga,
+				capidadTanque,
+				velocidadMax
+)
+
+SELECT DISTINCT MODELO_CAMION,MODELO_CAPACIDAD_CARGA,MODELO_CAPACIDAD_TANQUE,MODELO_VELOCIDAD_MAX
+FROM gd_esquema.Maestra
+WHERE MODELO_CAMION is not null
