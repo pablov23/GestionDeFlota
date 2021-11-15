@@ -405,11 +405,10 @@ INSERT INTO [ABAN_DER_ADOS].[Camion](
 SELECT DISTINCT maestra.[CAMION_PATENTE], [modelo].modelo_codigo, marca.[marca_codigo], maestra.[CAMION_FECHA_ALTA],maestra.[CAMION_NRO_MOTOR],maestra.[CAMION_NRO_CHASIS]
 from gd_esquema.Maestra maestra
 JOIN [ABAN_DER_ADOS].[ModeloCamion] modelo
-ON [MODELO_CAMION] = [modelo].modelo_descripcion
+ON [MODELO_CAMION] = [modelo].modelo_descripcion AND modelo.modelo_capacidad_carga+modelo.modelo_capidad_tanque+modelo_velocidad_maxima = maestra.MODELO_CAPACIDAD_CARGA+maestra.MODELO_CAPACIDAD_TANQUE+maestra.MODELO_VELOCIDAD_MAX
 JOIN [ABAN_DER_ADOS].[Marca] marca
 ON [MARCA_CAMION_MARCA] = [marca].marca_descripcion
 WHERE CAMION_PATENTE is not null
-
 
 
 
@@ -440,7 +439,6 @@ INSERT INTO [ABAN_DER_ADOS].Viaje(
 				viaje_recorrido
 )
 SELECT DISTINCT CHOFER_NRO_LEGAJO,camion.camion_codigo ,VIAJE_FECHA_INICIO,VIAJE_FECHA_FIN,VIAJE_CONSUMO_COMBUSTIBLE,recorrido.recorrido_codigo FROM gd_esquema.Maestra
-JOIN ABAN_DER_ADOS.Chofer chofer ON (CHOFER_NRO_LEGAJO = chofer.chof_legajo)
 JOIN ABAN_DER_ADOS.Camion camion ON (Maestra.CAMION_PATENTE = camion.camion_patente)
 JOIN ABAN_DER_ADOS.Ciudad co ON (RECORRIDO_CIUDAD_ORIGEN = co.ciudad_nombre)
 JOIN ABAN_DER_ADOS.Ciudad cd ON (RECORRIDO_CIUDAD_DESTINO = cd.ciudad_nombre)
@@ -473,11 +471,13 @@ INSERT INTO ABAN_DER_ADOS.TareaxOrden(
 	,tarea_x_orden_duracion_real
 		
 )
-SELECT DISTINCT ot.orden_codigo,mec.mecanico_legajo,tar.tarea_codigo,TAREA_FECHA_INICIO,TAREA_FECHA_INICIO_PLANIFICADO, TAREA_FECHA_FIN, 0 as 'duracion real' FROM gd_esquema.Maestra
-JOIN ABAN_DER_ADOS.Mecanico mec on (mec.mecanico_legajo = Maestra.MECANICO_NRO_LEGAJO)
-JOIN ABAN_DER_ADOS.Tarea tar on (tar.tarea_codigo = Maestra.TAREA_CODIGO)
-JOIN ABAN_DER_ADOS.OrdenTrabajo ot on (ot.orden_fecha = Maestra.ORDEN_TRABAJO_FECHA)
+SELECT DISTINCT ot.orden_codigo,Maestra.MECANICO_NRO_LEGAJO,Maestra.TAREA_CODIGO,TAREA_FECHA_INICIO,TAREA_FECHA_INICIO_PLANIFICADO, TAREA_FECHA_FIN, 0 as 'duracion real' FROM gd_esquema.Maestra
+JOIN ABAN_DER_ADOS.ModeloCamion m ON (m.modelo_capacidad_carga+m.modelo_capidad_tanque+m.modelo_velocidad_maxima = Maestra.MODELO_CAPACIDAD_CARGA+Maestra.MODELO_CAPACIDAD_TANQUE+Maestra.MODELO_VELOCIDAD_MAX)
+JOIN ABAN_DER_ADOS.Camion c ON (c.camion_patente = Maestra.CAMION_PATENTE AND m.modelo_codigo = c.camion_modelo)
+JOIN ABAN_DER_ADOS.OrdenTrabajo ot on (ot.orden_fecha = Maestra.ORDEN_TRABAJO_FECHA AND ot.orden_camion = c.camion_codigo)
 WHERE ORDEN_TRABAJO_FECHA is not null
+ORDER BY 2
+
 --
 ----------Migracion MaterialxTareax-----------------------------------------------
 
