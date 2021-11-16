@@ -278,8 +278,6 @@ ON [TIPO_TAREA] = tipo_tarea_descripcion
 WHERE TAREA_CODIGO is not null
 
 
-
-
 ----------Migracion Taller -------------------------------------------------------
 
 INSERT INTO [ABAN_DER_ADOS].[Taller](
@@ -394,9 +392,6 @@ JOIN [ABAN_DER_ADOS].[Marca] marca
 ON [MARCA_CAMION_MARCA] = [marca].marca_descripcion
 WHERE CAMION_PATENTE is not null
 
-
-
-
 ----------Migracion Recorrido-----------------------------------------------
 
 INSERT INTO [ABAN_DER_ADOS].Recorrido(
@@ -438,12 +433,16 @@ INSERT INTO [ABAN_DER_ADOS].OrdenTrabajo(
 				,orden_fecha
 				
 )
-SELECT DISTINCT camion.camion_codigo, eot.estado_codigo ,ORDEN_TRABAJO_FECHA FROM gd_esquema.Maestra
-JOIN ABAN_DER_ADOS.EstadoOT eot on (eot.estado_descripcion = ORDEN_TRABAJO_ESTADO)
-JOIN ABAN_DER_ADOS.Camion camion ON (Maestra.CAMION_PATENTE = camion.camion_patente)
-WHERE ORDEN_TRABAJO_FECHA is not null
-
-
+SELECT DISTINCT 
+	camion.camion_codigo
+	, eot.estado_codigo 
+	,ORDEN_TRABAJO_FECHA 
+FROM gd_esquema.Maestra
+JOIN ABAN_DER_ADOS.EstadoOT eot 
+	on (eot.estado_descripcion = ORDEN_TRABAJO_ESTADO)
+JOIN ABAN_DER_ADOS.Camion camion 
+	ON (Maestra.CAMION_PATENTE = camion.camion_patente)
+WHERE TAREA_FECHA_INICIO is not null
 
 ----------Migracion TareaXOrden-----------------------------------------------
 
@@ -457,11 +456,21 @@ INSERT INTO ABAN_DER_ADOS.TareaxOrden(
 	,tarea_x_orden_duracion_real
 		
 )
-SELECT DISTINCT ot.orden_codigo,Maestra.MECANICO_NRO_LEGAJO,Maestra.TAREA_CODIGO,TAREA_FECHA_INICIO,TAREA_FECHA_INICIO_PLANIFICADO, TAREA_FECHA_FIN, 0 as 'duracion real' FROM gd_esquema.Maestra
-JOIN ABAN_DER_ADOS.ModeloCamion m ON (m.modelo_capacidad_carga+m.modelo_capidad_tanque+m.modelo_velocidad_maxima = Maestra.MODELO_CAPACIDAD_CARGA+Maestra.MODELO_CAPACIDAD_TANQUE+Maestra.MODELO_VELOCIDAD_MAX)
-JOIN ABAN_DER_ADOS.Camion c ON (c.camion_patente = Maestra.CAMION_PATENTE AND m.modelo_codigo = c.camion_modelo)
-JOIN ABAN_DER_ADOS.OrdenTrabajo ot on (ot.orden_fecha = Maestra.ORDEN_TRABAJO_FECHA AND ot.orden_camion = c.camion_codigo)
-WHERE ORDEN_TRABAJO_FECHA is not null
+
+SELECT DISTINCt
+ot.orden_codigo
+,MECANICO_NRO_LEGAJO 
+,TAREA_CODIGO
+,TAREA_FECHA_INICIO
+,TAREA_FECHA_INICIO_PLANIFICADO
+,TAREA_FECHA_FIN
+,DATEDIFF(DAY,TAREA_FECHA_Inicio,TAREA_FECHA_FIN)
+FROM gd_esquema.Maestra
+JOIN ABAN_DER_ADOS.Camion c 
+	ON c.camion_patente = MAestra.CAMION_PATENTE
+JOIN ABAN_DER_ADOS.OrdenTrabajo ot
+	ON ot.orden_fecha = ORDEN_TRABAJO_FECHA AND ot.orden_camion = c.camion_codigo
+WHERE TAREA_FECHA_INICIO is not null 
 
 
 --
@@ -476,11 +485,13 @@ SELECT
 	,TareaxOrden.tarea_x_orden_codigo
 	,COUNT(*) 'cantidad'
 FROM gd_esquema.Maestra
-	JOIN ABAN_DER_ADOS.EstadoOT 
-		ON EstadoOT.estado_descripcion = Maestra.ORDEN_TRABAJO_ESTADO
+	JOIN ABAN_DER_ADOS.Camion c
+		ON c.camion_patente = Maestra.CAMION_PATENTE
+	JOIN ABAN_DER_ADOS.OrdenTrabajo ot 
+		on ot.orden_fecha = Maestra.ORDEN_TRABAJO_FECHA and ot.orden_camion = c.camion_codigo
 	JOIN ABAN_DER_ADOS.TareaxOrden
 		ON TareaxOrden.tarea_x_orden_tarea = Maestra.TAREA_CODIGO 
-			and TareaxOrden.tarea_x_orden_ot = EstadoOT.estado_codigo
+			and TareaxOrden.tarea_x_orden_ot = ot.orden_codigo
 			and TareaxOrden.tarea_x_orden_mecanico = Maestra.MECANICO_NRO_LEGAJO
 GROUP BY MATERIAL_COD,TareaxOrden.tarea_x_orden_codigo
 
@@ -495,7 +506,6 @@ SELECT DISTINCT
 	,c.camion_codigo
 FROM gd_esquema.Maestra
 JOIN ABAN_DER_ADOS.EstadoOT eot ON (eot.estado_descripcion = Maestra.ORDEN_TRABAJO_ESTADO)
-JOIN ABAN_DER_ADOS.ModeloCamion m ON (Maestra.MODELO_CAPACIDAD_CARGA+Maestra.MODELO_CAPACIDAD_TANQUE+Maestra.MODELO_VELOCIDAD_MAX = m.modelo_capacidad_carga+m.modelo_capidad_tanque+m.modelo_velocidad_maxima)
 JOIN ABAN_DER_ADOS.Camion c ON (Maestra.CAMION_PATENTE = c.camion_patente)
 
 
