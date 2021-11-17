@@ -424,8 +424,6 @@ JOIN ABAN_DER_ADOS.Ciudad cd ON (RECORRIDO_CIUDAD_DESTINO = cd.ciudad_nombre)
 JOIN ABAN_DER_ADOS.Recorrido recorrido ON (co.ciudad_codigo = recorrido.recorrido_origen and cd.ciudad_codigo = recorrido.recorrido_destino)
 WHERE VIAJE_FECHA_INICIO is not null
 
-
-
 ----------Migracion Orden Trabajo-----------------------------------------------
 INSERT INTO [ABAN_DER_ADOS].OrdenTrabajo(
 				orden_camion
@@ -442,7 +440,9 @@ JOIN ABAN_DER_ADOS.EstadoOT eot
 	on (eot.estado_descripcion = ORDEN_TRABAJO_ESTADO)
 JOIN ABAN_DER_ADOS.Camion camion 
 	ON (Maestra.CAMION_PATENTE = camion.camion_patente)
-WHERE TAREA_FECHA_INICIO is not null
+WHERE ORDEN_TRABAJO_FECHA is not null
+GROUP BY ORDEN_TRABAJO_FECHA
+
 
 ----------Migracion TareaXOrden-----------------------------------------------
 
@@ -460,17 +460,20 @@ INSERT INTO ABAN_DER_ADOS.TareaxOrden(
 SELECT DISTINCt
 ot.orden_codigo
 ,MECANICO_NRO_LEGAJO 
-,TAREA_CODIGO
+,t.tarea_codigo
 ,TAREA_FECHA_INICIO
 ,TAREA_FECHA_INICIO_PLANIFICADO
 ,TAREA_FECHA_FIN
 ,DATEDIFF(DAY,TAREA_FECHA_Inicio,TAREA_FECHA_FIN)
 FROM gd_esquema.Maestra
-JOIN ABAN_DER_ADOS.Camion c 
-	ON c.camion_patente = MAestra.CAMION_PATENTE
 JOIN ABAN_DER_ADOS.OrdenTrabajo ot
-	ON ot.orden_fecha = ORDEN_TRABAJO_FECHA AND ot.orden_camion = c.camion_codigo
+	ON ot.orden_fecha = ORDEN_TRABAJO_FECHA 
+JOIN ABAN_DER_ADOS.Camion c 
+	ON c.camion_patente = MAestra.CAMION_PATENTE AND ot.orden_camion = c.camion_codigo
+JOIN ABAN_DER_ADOS.Tarea t
+	ON t.tarea_codigo = Maestra.TAREA_CODIGO
 WHERE TAREA_FECHA_INICIO is not null 
+
 
 
 --
@@ -529,6 +532,7 @@ SELECT  p.tipo_paquete_codigo,viaje_codigo, PAQUETE_CANTIDAD FROM  gd_esquema.Ma
 		AND P.tipo_paquete_largo_max = M.PAQUETE_LARGO_MAX
 		AND P.tipo_paquete_peso_max = M.PAQUETE_PESO_MAX
 WHERE M.VIAJE_FECHA_INICIO is not null
+
 
 END
 GO

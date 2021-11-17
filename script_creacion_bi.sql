@@ -304,21 +304,21 @@ INSERT INTO ABAN_DER_ADOS.BI_HECHO_OT
 	ot_fecha_inicio,
 	ot_fecha_fin,ot_tarea)
 SELECT  DISTINCT
-ot.orden_codigo
-,txo.tarea_x_orden_mecanico
-,ot.orden_camion
-,f.fecha_id
-,tar.tarea_tipo
-,c.camion_marca
-,c.camion_modelo
-,mec.mecanico_taller
-,txo.tarea_x_orden_duracion_real
-,mt.material_codigo
-,mxt.cantidad
-,txo.tarea_x_orden_fecha_inicio_planificada
-,txo.tarea_x_orden_fecha_inicio
-,txo.tarea_x_orden_fecha_fin
-,tarea_codigo
+	ot.orden_codigo
+	,txo.tarea_x_orden_mecanico
+	,ot.orden_camion
+	,f.fecha_id
+	,tar.tarea_tipo
+	,c.camion_marca
+	,c.camion_modelo
+	,mec.mecanico_taller
+	,txo.tarea_x_orden_duracion_real
+	,mt.material_codigo
+	,mxt.cantidad
+	,txo.tarea_x_orden_fecha_inicio_planificada
+	,txo.tarea_x_orden_fecha_inicio
+	,txo.tarea_x_orden_fecha_fin
+	,tarea_codigo
 FROM ABAN_DER_ADOS.OrdenTrabajo ot
 JOIN ABAN_DER_ADOS.TareaxOrden txo
 	on txo.tarea_x_orden_ot= ot.orden_codigo
@@ -350,8 +350,9 @@ CREATE TABLE ABAN_DER_ADOS.BI_HECHO_VIAJE
 	viaje_paquete int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_paquete,
 	viaje_cantidad_paquete int,
 	viaje_combustible int,
-	viaje_fecha_inicio date,
-	viaje_fecha_fin date
+	viaje_duracion int,
+	viaje_subtotal_paquete DECIMAL(10,2),
+	viaje_subtotal_recorrido DECIMAL(10,2)
 	
 )
 INSERT INTO ABAN_DER_ADOS.BI_HECHO_VIAJE
@@ -363,10 +364,13 @@ INSERT INTO ABAN_DER_ADOS.BI_HECHO_VIAJE
 	viaje_modelo,
 	viaje_paquete ,
 	viaje_cantidad_paquete ,
-	viaje_fecha_inicio ,
-	viaje_fecha_fin,
-	viaje_combustible )
-SELECT v.viaje_recorrido,v.viaje_chofer,v.viaje_camion,f.fecha_id,c.camion_marca,c.camion_modelo,pv.paquete_codigo,pv.paquete_cantidad,v.viaje_fecha_inicio,v.viaje_fecha_fin,v.viaje_litros_combustible  FROM ABAN_DER_ADOS.Viaje v
+	viaje_duracion,
+	viaje_combustible,
+	viaje_subtotal_paquete,
+	viaje_subtotal_recorrido
+	)
+SELECT v.viaje_recorrido,v.viaje_chofer,v.viaje_camion,f.fecha_id,c.camion_marca,c.camion_modelo,pv.paquete_codigo,pv.paquete_cantidad,DATEDIFF(DAY,v.viaje_fecha_inicio,v.viaje_fecha_fin),v.viaje_litros_combustible,p.tipo_paquete_precio*pv.paquete_cantidad,r.recorrido_precio*pv.paquete_cantidad
+  FROM ABAN_DER_ADOS.Viaje v
 JOIN ABAN_DER_ADOS.Recorrido r
 	ON v.viaje_recorrido = r.recorrido_codigo
 JOIN ABAN_DER_ADOS.bi_fecha f
@@ -375,6 +379,9 @@ JOIN ABAN_DER_ADOS.Camion c
 	ON v.viaje_camion = c.camion_codigo
 JOIN ABAN_DER_ADOS.PaquetexViaje pv
 	ON pv.paquete_viaje = v.viaje_codigo
+JOIN ABAN_DER_ADOS.TipoPaquete p
+	ON p.tipo_paquete_codigo = pv.paquete_codigo
+
 GO
 /************************************/
 /*				VIEW				*/
@@ -399,6 +406,7 @@ JOIN ABAN_DER_ADOS.BI_Camion c
 	ON c.camion_codigo = ot.ot_camion
 GROUP BY f.anio,f.cuatrimestre,c.camion_patente
 GO
+
 /*
 Costo total de mantenimiento por camión, por taller, por cuatrimestre. 
 Se entiende por costo de mantenimiento el costo de materiales + el costo 
@@ -417,7 +425,7 @@ SELECT
 	,f.cuatrimestre 'CUATRIMESTRE'
 	,tt.tipo_tarea_nombre 'TIPO TAREA'
 	,sum(mec.mecanico_costo_hora*8*hot.ot_tarea_duracion)+sum(material_precio*hot.ot_cantidad_material) 'COSTO' FROM ABAN_DER_ADOS.BI_HECHO_OT hot
-JOIN ABAN_DER_ADOS.Camion c
+JOIN ABAN_DER_ADOS.BI_Camion c
 	ON c.camion_codigo = hot.ot_camion
 JOIN ABAN_DER_ADOS.BI_taller t
 	ON t.taller_codigo= hot.ot_taller
@@ -492,7 +500,7 @@ WHERE m.material_codigo IN(
 	GROUP BY t2.taller_nombre,m2.material_codigo
 	ORDER BY SUM(ot2.ot_cantidad_material) DESC
 )
-
+GO
 /*
 Facturación total por recorrido por cuatrimestre. (En función de la cantidad 
 y tipo de paquetes que transporta el camión y el recorrido)
@@ -500,6 +508,7 @@ y tipo de paquetes que transporta el camión y el recorrido)
 Precio del recorrido. El precio del recorrido es utilizado como base 
 para calcular cuánto se cobra el transporte de un paquete. 
 */
+
 CREATE VIEW V_facturacion_total
 AS
 SELECT 
@@ -507,7 +516,7 @@ SELECT
 	,r.recorrido_destino 'destino'
 	,f.anio 'anio'
 	,f.cuatrimestre 'cuatrimestre'
-	,SUM(hv.viaje_cantidad_paquete*p.paquete_precio) + r.recorrido_precio*sum(viaje_cantidad_paquete) 'precio facturacion'
+	,SUM(hv.viaje_subtotal_recorrido+hv.viaje_subtotal_paquete) 'precio facturacion'
 FROM ABAN_DER_ADOS.BI_HECHO_VIAJE hv
 JOIN ABAN_DER_ADOS.BI_recorrido r
 	ON r.recorrido_codigo = hv.viaje_recorrido
@@ -515,7 +524,9 @@ JOIN ABAN_DER_ADOS.bi_fecha f
 	ON f.fecha_id = hv.viaje_fecha
 JOIN ABAN_DER_ADOS.BI_paquete p
 	ON p.paquete_codigo = hv.viaje_paquete
-GROUP BY  r.recorrido_origen,r.recorrido_destino,f.anio,f.cuatrimestre,r.recorrido_precio,viaje_cantidad_paquete
+GROUP BY  r.recorrido_origen,r.recorrido_destino,f.anio,f.cuatrimestre
+GO
+
 
 
 
@@ -526,12 +537,12 @@ CREATE VIEW V_costo_promedio_choferes
 AS
 SELECT DISTINCT 
 	ch.chofer_rango_edad 'Rango etario'
-	,AVG(ch.chofer_costo_hora)  'costo promedio'
+	,AVG(ch.chofer_costo_hora*8*hv.viaje_duracion)  'costo promedio'
 FROM ABAN_DER_ADOS.BI_HECHO_VIAJE hv
 JOIN ABAN_DER_ADOS.BI_chofer ch
 	ON ch.chofer_legajo = hv.viaje_chofer
 GROUP BY ch.chofer_rango_edad
-
+GO
 /*
  Ganancia por camión (Ingresos – Costo de viaje – Costo de mantenimiento) 
 o Ingresos: en función de la cantidad y tipo de paquetes que 
@@ -541,44 +552,38 @@ Tomar precio por lt de combustible $100.-
 o Costo de mantenimiento: costo de materiales + costo de mano de 
 obra.
 */
+CREATE VIEW V_ganancia_x_camion
+AS
+SELECT DISTINCT
+c.camion_patente 'Camion ' 
+,
+(
+--FACTURACION
+SELECT 
+	SUM(hv.viaje_subtotal_paquete)+SUM(hv.viaje_subtotal_recorrido) 
+	-
+	SUM(c.chofer_costo_hora*8*hv.viaje_duracion)+sum(hv.viaje_combustible*100)
+FROM ABAN_DER_ADOS.BI_HECHO_VIAJE hv
+JOIN ABAN_DER_ADOS.BI_chofer c
+	ON c.chofer_legajo = hv.viaje_chofer
+WHERE hv.viaje_camion = hv2.viaje_camion
+)
+-
+(
+--COSTO de mantenimiento
+SELECT 
+	SUM(m.material_precio*ot.ot_cantidad_material)+SUM(mec.mecanico_costo_hora*8*ot.ot_tarea_duracion) 
+FROM ABAN_DER_ADOS.BI_HECHO_OT ot
+JOIN ABAN_DER_ADOS.BI_material m
+	ON m.material_codigo = ot.ot_material
+JOIN ABAN_DER_ADOS.BI_mecanico mec
+	ON mec.mecanico_legajo= ot.ot_mecanico
+WHERE ot.ot_camion = hv2.viaje_camion
+)'ganancia'
 
---cuenta por recorrido * paquete
-SELECT DISTINCT (SELECT SUM(hv.viaje_cantidad_paquete*r.recorrido_precio) FROM ABAN_DER_ADOS.BI_HECHO_VIAJE hv
-JOIN ABAN_DER_ADOS.BI_recorrido r
- ON r.recorrido_codigo=hv.viaje_recorrido
- WHERE hv.viaje_camion =hv1.viaje_camion
-
-)+ (SELECT SUM(hv.viaje_cantidad_paquete* p.paquete_precio) FROM ABAN_DER_ADOS.BI_HECHO_VIAJE hv
-JOIN ABAN_DER_ADOS.BI_paquete p
-	ON p.paquete_codigo = hv.viaje_paquete
- WHERE hv.viaje_camion =hv1.viaje_camion
- )'Ingresos'
- /* ,(
- SELECT SUM(ch.chofer_costo_hora*DATEDIFF(DAY,hv.viaje_fecha_inicio,hv.viaje_fecha_fin)*8) FROM ABAN_DER_ADOS.BI_HECHO_VIAJE hv
-JOIN ABAN_DER_ADOS.Recorrido r
-	ON r.recorrido_codigo = hv.viaje_recorrido
-JOIN ABAN_DER_ADOS.BI_Chofer ch
- ON ch.chofer_legajo = hv.viaje_chofer
- WHERE hv.viaje_camion =hv1.viaje_camion
-)+(
-SELECT SUM(hv.viaje_combustible*100) FROM ABAN_DER_ADOS.BI_HECHO_VIAJE hv
-JOIN ABAN_DER_ADOS.Recorrido r
-	ON r.recorrido_codigo = hv.viaje_recorrido
-WHERE hv.viaje_camion =hv1.viaje_camion
- ) 'Costo de viaje'
- DA VALORES MUUUUUUUUY FEOS
- */
- /*
- , costo matenimiento JOINEAR con mLa otra tabla y hacer lo mismo que en la view de mantinimiento pero sin la fecha
- */
-  FROM ABAN_DER_ADOS.BI_HECHO_VIAJE hv1
-
-
-SELECT DISTINCT SUM(ch.chofer_costo_hora*DATEDIFF(DAY,hv.viaje_fecha_inicio,hv.viaje_fecha_fin)*8) FROM ABAN_DER_ADOS.BI_HECHO_VIAJE hv
-JOIN ABAN_DER_ADOS.BI_Chofer ch
- ON ch.chofer_legajo = hv.viaje_chofer
- WHERE hv.viaje_camion =2
-
+FROM ABAN_DER_ADOS.BI_HECHO_VIAJE hv2
+JOIN ABAN_DER_ADOS.BI_Camion c
+	ON c.camion_codigo = hv2.viaje_camion
 
 
 
