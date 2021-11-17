@@ -251,12 +251,6 @@ INSERT INTO ABAN_DER_ADOS.BI_tarea
 )
 SELECT tarea_codigo,tarea_descripcion,tarea_tiempo FROM ABAN_DER_ADOS.Tarea
 
-INSERT INTO ABAN_DER_ADOS.BI_orden
-(
-		orden_codigo,
-		orden_fecha
-)
-SELECT orden_codigo,orden_fecha FROM ABAN_DER_ADOS.OrdenTrabajo
 
 INSERT INTO ABAN_DER_ADOS.BI_paquete(
 				paquete_peso_max ,
@@ -266,7 +260,7 @@ INSERT INTO ABAN_DER_ADOS.BI_paquete(
 				paquete_descripcion ,
 				paquete_precio
 )
-SELECT tipo_paquete_peso_max,tipo_paquete_alto_max,tipo_paquete_ancho_max,tipo_paquete_largo_max,tipo_paquete_descripcion,tipo_paquete_precio FROM ABAN_DER_ADOS.TipoPaquete
+SELECT paquete_peso_max,paquete_alto_max,paquete_ancho_max,paquete_largo_max,paquete_descripcion,paquete_precio FROM ABAN_DER_ADOS.Paquete
 
 
 /************************************/
@@ -279,7 +273,7 @@ SELECT tipo_paquete_peso_max,tipo_paquete_alto_max,tipo_paquete_ancho_max,tipo_p
 CREATE TABLE ABAN_DER_ADOS.BI_HECHO_OT
 (
 	hecho_id Integer Identity(1,1) Primary Key,
-	ot_codigo Integer FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_orden,
+	ot_nro_orden int,
 	ot_mecanico VARCHAR(50) FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_mecanico,
 	ot_camion int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_camion,
 	ot_fecha int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_fecha,
@@ -300,7 +294,7 @@ CREATE TABLE ABAN_DER_ADOS.BI_HECHO_OT
 
 
 INSERT INTO ABAN_DER_ADOS.BI_HECHO_OT
-(ot_codigo,ot_mecanico,ot_camion,ot_fecha,ot_tipo_tarea,ot_marca,ot_modelo,ot_taller,ot_tarea_duracion,ot_material,ot_cantidad_material,ot_fecha_planificada,
+(ot_nro_orden,ot_mecanico,ot_camion,ot_fecha,ot_tipo_tarea,ot_marca,ot_modelo,ot_taller,ot_tarea_duracion,ot_material,ot_cantidad_material,ot_fecha_planificada,
 	ot_fecha_inicio,
 	ot_fecha_fin,ot_tarea)
 SELECT  DISTINCT
@@ -369,7 +363,7 @@ INSERT INTO ABAN_DER_ADOS.BI_HECHO_VIAJE
 	viaje_subtotal_paquete,
 	viaje_subtotal_recorrido
 	)
-SELECT v.viaje_recorrido,v.viaje_chofer,v.viaje_camion,f.fecha_id,c.camion_marca,c.camion_modelo,pv.paquete_codigo,pv.paquete_cantidad,DATEDIFF(DAY,v.viaje_fecha_inicio,v.viaje_fecha_fin),v.viaje_litros_combustible,p.tipo_paquete_precio*pv.paquete_cantidad,r.recorrido_precio*pv.paquete_cantidad
+SELECT v.viaje_recorrido,v.viaje_chofer,v.viaje_camion,f.fecha_id,c.camion_marca,c.camion_modelo,pv.paquete_codigo,pv.paquete_cantidad,DATEDIFF(DAY,v.viaje_fecha_inicio,v.viaje_fecha_fin),v.viaje_litros_combustible,p.paquete_precio*pv.paquete_cantidad,r.recorrido_precio*pv.paquete_cantidad
   FROM ABAN_DER_ADOS.Viaje v
 JOIN ABAN_DER_ADOS.Recorrido r
 	ON v.viaje_recorrido = r.recorrido_codigo
@@ -379,8 +373,8 @@ JOIN ABAN_DER_ADOS.Camion c
 	ON v.viaje_camion = c.camion_codigo
 JOIN ABAN_DER_ADOS.PaquetexViaje pv
 	ON pv.paquete_viaje = v.viaje_codigo
-JOIN ABAN_DER_ADOS.TipoPaquete p
-	ON p.tipo_paquete_codigo = pv.paquete_codigo
+JOIN ABAN_DER_ADOS.Paquete p
+	ON p.paquete_codigo = pv.paquete_codigo
 
 GO
 /************************************/
@@ -447,12 +441,12 @@ Desvío promedio de cada tarea x taller.
 CREATE VIEW V_desvio_promedio
 AS
 SELECT 
-	SUM(DATEDIFF(DAY,ot.ot_fecha_planificada,ot.ot_fecha_inicio))/COUNT(ot_codigo)'desvio'
+	SUM(DATEDIFF(DAY,ot.ot_fecha_planificada,ot.ot_fecha_inicio))/COUNT(ot_nro_orden)'desvio'
 	,t.taller_nombre 'TALLER'
 FROM ABAN_DER_ADOS.BI_HECHO_OT ot
 JOIN ABAN_DER_ADOS.BI_taller t
 	ON t.taller_codigo = ot.ot_taller
-GROUP BY ot.ot_codigo,t.taller_nombre
+GROUP BY ot.ot_nro_orden,t.taller_nombre
 GO
 
 /*
@@ -493,7 +487,7 @@ JOIN ABAN_DER_ADOS.BI_material m
 WHERE m.material_codigo IN(
 	SELECT TOP 10 m2.material_codigo FROM ABAN_DER_ADOS.BI_HECHO_OT ot2
 	JOIN ABAN_DER_ADOS.BI_taller t2
-		ON t2.taller_codigo = ot2.ot_codigo
+		ON t2.taller_codigo = ot2.ot_nro_orden
 	JOIN ABAN_DER_ADOS.BI_material m2
 		ON m2.material_codigo = ot2.ot_material
 	WHERE t2.taller_codigo=t.taller_codigo
@@ -537,7 +531,7 @@ CREATE VIEW V_costo_promedio_choferes
 AS
 SELECT DISTINCT 
 	ch.chofer_rango_edad 'Rango etario'
-	,AVG(ch.chofer_costo_hora*8*hv.viaje_duracion)  'costo promedio'
+	,AVG(ch.chofer_costo_hora)  'costo promedio'
 FROM ABAN_DER_ADOS.BI_HECHO_VIAJE hv
 JOIN ABAN_DER_ADOS.BI_chofer ch
 	ON ch.chofer_legajo = hv.viaje_chofer

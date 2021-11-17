@@ -146,15 +146,15 @@ CREATE TABLE [ABAN_DER_ADOS].MaterialxTarea(
 				
 )
 
-CREATE TABLE [ABAN_DER_ADOS].TipoPaquete(
-				tipo_paquete_codigo int Identity(1,1) NOT NULL,
-				tipo_paquete_peso_max int,
-				tipo_paquete_alto_max int,
-				tipo_paquete_ancho_max int,
-				tipo_paquete_largo_max int,
-				tipo_paquete_descripcion nvarchar(50),
-				tipo_paquete_precio int,
-				CONSTRAINT PK_TIPOPAQUETE PRIMARY KEY(tipo_paquete_codigo)
+CREATE TABLE [ABAN_DER_ADOS].Paquete(
+				paquete_codigo int Identity(1,1) NOT NULL,
+				paquete_peso_max int,
+				paquete_alto_max int,
+				paquete_ancho_max int,
+				paquete_largo_max int,
+				paquete_descripcion nvarchar(50),
+				paquete_precio int,
+				CONSTRAINT PK_Paquete PRIMARY KEY(paquete_codigo)
 )
 
 CREATE TABLE [ABAN_DER_ADOS].Recorrido(
@@ -187,7 +187,7 @@ CREATE TABLE [ABAN_DER_ADOS].PaquetexViaje(
 				paquete_codigo int NOT NULL,  --(- ojo preguntar con esto -)
 				paquete_viaje int NOT NULL, 
 				paquete_cantidad int,
-				CONSTRAINT FK_idPaquete FOREIGN KEY(paquete_codigo) REFERENCES [ABAN_DER_ADOS].[TipoPaquete](tipo_paquete_codigo) ,
+				CONSTRAINT FK_idPaquete FOREIGN KEY(paquete_codigo) REFERENCES [ABAN_DER_ADOS].[Paquete](paquete_codigo) ,
 				CONSTRAINT FK_idViaje FOREIGN KEY(paquete_viaje) REFERENCES [ABAN_DER_ADOS].[Viaje](viaje_codigo)
 )
 END
@@ -237,6 +237,7 @@ WHERE RECORRIDO_CIUDAD_ORIGEN is not null)
 UNION
 (SELECT DISTINCT TALLER_CIUDAD  AS Ciudad FROM gd_esquema.Maestra
 WHERE TALLER_CIUDAD is not null)
+
 
 
 
@@ -333,15 +334,15 @@ ON maestra.[TALLER_NOMBRE] = taller.taller_nombre
 WHERE MECANICO_NRO_LEGAJO is not null
 
 
-----------Migracion TipoPaquete-----------------------------------------------
+----------Migracion Paquete-----------------------------------------------
 
-INSERT INTO [ABAN_DER_ADOS].[TipoPaquete](
-				tipo_paquete_peso_max,
-				tipo_paquete_alto_max,
-				tipo_paquete_ancho_max,
-				tipo_paquete_largo_max,
-				tipo_paquete_descripcion,
-				tipo_paquete_precio
+INSERT INTO [ABAN_DER_ADOS].[Paquete](
+				paquete_peso_max,
+				paquete_alto_max,
+				paquete_ancho_max,
+				paquete_largo_max,
+				paquete_descripcion,
+				paquete_precio
 )
 
 SELECT DISTINCT [PAQUETE_PESO_MAX], [PAQUETE_ALTO_MAX], [PAQUETE_ANCHO_MAX], [PAQUETE_LARGO_MAX], [PAQUETE_DESCRIPCION],[PAQUETE_PRECIO]
@@ -441,7 +442,7 @@ JOIN ABAN_DER_ADOS.EstadoOT eot
 JOIN ABAN_DER_ADOS.Camion camion 
 	ON (Maestra.CAMION_PATENTE = camion.camion_patente)
 WHERE ORDEN_TRABAJO_FECHA is not null
-GROUP BY ORDEN_TRABAJO_FECHA
+
 
 
 ----------Migracion TareaXOrden-----------------------------------------------
@@ -517,7 +518,7 @@ JOIN ABAN_DER_ADOS.Camion c ON (Maestra.CAMION_PATENTE = c.camion_patente)
 INSERT INTO ABAN_DER_ADOS.PaquetexViaje(
 	paquete_codigo,paquete_viaje,paquete_cantidad
 )
-SELECT  p.tipo_paquete_codigo,viaje_codigo, PAQUETE_CANTIDAD FROM  gd_esquema.Maestra m
+SELECT  p.paquete_codigo,viaje_codigo, PAQUETE_CANTIDAD FROM  gd_esquema.Maestra m
 	JOIN ABAN_DER_ADOS.Camion c ON c.camion_patente = m.CAMION_PATENTE
 	JOIN ABAN_DER_ADOS.Viaje v 
 		ON 
@@ -525,12 +526,12 @@ SELECT  p.tipo_paquete_codigo,viaje_codigo, PAQUETE_CANTIDAD FROM  gd_esquema.Ma
 		and v.viaje_fecha_fin=m.VIAJE_FECHA_FIN
 		AND v.viaje_chofer = m.CHOFER_NRO_LEGAJO
 		AND	v.viaje_camion = c.camion_codigo
-	JOIN ABAN_DER_ADOS.TipoPaquete P 
-		ON M.PAQUETE_DESCRIPCION = P.tipo_paquete_descripcion
-		AND P.tipo_paquete_alto_max = M.PAQUETE_ALTO_MAX
-		AND P.tipo_paquete_ancho_max = M.PAQUETE_ANCHO_MAX
-		AND P.tipo_paquete_largo_max = M.PAQUETE_LARGO_MAX
-		AND P.tipo_paquete_peso_max = M.PAQUETE_PESO_MAX
+	JOIN ABAN_DER_ADOS.Paquete P 
+		ON M.PAQUETE_DESCRIPCION = P.paquete_descripcion
+		AND P.paquete_alto_max = M.PAQUETE_ALTO_MAX
+		AND P.paquete_ancho_max = M.PAQUETE_ANCHO_MAX
+		AND P.paquete_largo_max = M.PAQUETE_LARGO_MAX
+		AND P.paquete_peso_max = M.PAQUETE_PESO_MAX
 WHERE M.VIAJE_FECHA_INICIO is not null
 
 
