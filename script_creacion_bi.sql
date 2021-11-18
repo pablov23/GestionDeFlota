@@ -28,8 +28,9 @@ GO
 CREATE TABLE ABAN_DER_ADOS.bi_fecha
 (
 	fecha_id INTEGER IDENTITY(1,1) PRIMARY KEY,
-	cuatrimestre integer,
-	anio integer
+	anio integer,
+	cuatrimestre integer
+	
 )
 
 CREATE TABLE ABAN_DER_ADOS.BI_Camion
@@ -153,6 +154,20 @@ UNION
 SELECT DISTINCT YEAR(viaje_fecha_fin),DATEPART(QUARTER,viaje_fecha_fin) FROM ABAN_DER_ADOS.Viaje
 UNION
 SELECT DISTINCT YEAR(orden_fecha),DATEPART(QUARTER,orden_fecha) FROM ABAN_DER_ADOS.OrdenTrabajo
+UNION
+SELECT DISTINCT YEAR(tarea_x_orden_fecha_inicio),DATEPART(QUARTER,tarea_x_orden_fecha_inicio) FROM ABAN_DER_ADOS.TareaxOrden
+UNION
+SELECT DISTINCT YEAR(tarea_x_orden_fecha_fin),DATEPART(QUARTER,tarea_x_orden_fecha_fin) FROM ABAN_DER_ADOS.TareaxOrden
+UNION
+SELECT DISTINCT YEAR(tarea_x_orden_fecha_inicio_planificada),DATEPART(QUARTER,tarea_x_orden_fecha_inicio_planificada) FROM ABAN_DER_ADOS.TareaxOrden
+UNION
+SELECT DISTINCT YEAR(camion_fecha_alta),DATEPART(QUARTER,camion_fecha_alta) FROM ABAN_DER_ADOS.Camion
+UNION
+SELECT DISTINCT YEAR(chof_fecha_nacimiento),DATEPART(QUARTER,chof_fecha_nacimiento) FROM ABAN_DER_ADOS.Chofer
+UNION
+SELECT DISTINCT YEAR(mecanico_fecha_nacimiento),DATEPART(QUARTER,mecanico_fecha_nacimiento) FROM ABAN_DER_ADOS.Mecanico
+
+
 
 INSERT INTO ABAN_DER_ADOS.BI_Camion
 (camion_fecha_alta,camion_nro_chasis,camion_nro_motor,camion_patente)
@@ -276,7 +291,10 @@ CREATE TABLE ABAN_DER_ADOS.BI_HECHO_OT
 	ot_nro_orden int,
 	ot_mecanico VARCHAR(50) FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_mecanico,
 	ot_camion int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_camion,
-	ot_fecha int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_fecha,
+	ot_fecha_orden int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_fecha,
+	ot_fecha_planificada int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_fecha,
+	ot_fecha_inicio int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_fecha,
+	ot_fecha_fin int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_fecha,
 	ot_taller int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_taller,
 	ot_tipo_tarea int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_tipo_tarea,
 	ot_tarea nvarchar(50) FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_tarea,
@@ -285,23 +303,30 @@ CREATE TABLE ABAN_DER_ADOS.BI_HECHO_OT
 	ot_material VARCHAR(50) FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_material,
 	ot_cantidad_material int,
 	ot_tarea_duracion int,
-	ot_fecha_planificada date,
-	ot_fecha_inicio date,
-	ot_fecha_fin date
-	
+	ot_dias_retraso_inicio int	
 )
 
 
 
 INSERT INTO ABAN_DER_ADOS.BI_HECHO_OT
-(ot_nro_orden,ot_mecanico,ot_camion,ot_fecha,ot_tipo_tarea,ot_marca,ot_modelo,ot_taller,ot_tarea_duracion,ot_material,ot_cantidad_material,ot_fecha_planificada,
-	ot_fecha_inicio,
-	ot_fecha_fin,ot_tarea)
+(ot_nro_orden,ot_mecanico
+	,ot_camion
+	,ot_fecha_orden
+	,ot_tipo_tarea,ot_marca
+	,ot_modelo,ot_taller
+	,ot_tarea_duracion
+	,ot_material
+	,ot_cantidad_material
+	,ot_fecha_planificada
+	,ot_fecha_inicio
+	,ot_fecha_fin
+	,ot_tarea
+	,ot_dias_retraso_inicio)
 SELECT  DISTINCT
 	ot.orden_codigo
 	,txo.tarea_x_orden_mecanico
 	,ot.orden_camion
-	,f.fecha_id
+	,fo.fecha_id
 	,tar.tarea_tipo
 	,c.camion_marca
 	,c.camion_modelo
@@ -309,17 +334,18 @@ SELECT  DISTINCT
 	,txo.tarea_x_orden_duracion_real
 	,mt.material_codigo
 	,mxt.cantidad
-	,txo.tarea_x_orden_fecha_inicio_planificada
-	,txo.tarea_x_orden_fecha_inicio
-	,txo.tarea_x_orden_fecha_fin
+	,ftip.fecha_id
+	,fti.fecha_id
+	,ftf.fecha_id
 	,tarea_codigo
+	,DATEDIFF(DAY,tarea_x_orden_fecha_inicio,tarea_x_orden_fecha_inicio_planificada)
 FROM ABAN_DER_ADOS.OrdenTrabajo ot
 JOIN ABAN_DER_ADOS.TareaxOrden txo
 	on txo.tarea_x_orden_ot= ot.orden_codigo
 JOIN ABAN_DER_ADOS.Tarea tar
 	on tar.tarea_codigo = txo.tarea_x_orden_tarea
-JOIN ABAN_DER_ADOS.bi_fecha f
-	on f.anio = YEAR(ot.orden_fecha) and f.cuatrimestre = DATEPART(QUARTER,ot.orden_fecha)
+JOIN ABAN_DER_ADOS.bi_fecha fo
+	on fo.anio = YEAR(ot.orden_fecha) AND fo.cuatrimestre=datepart(QUARTER,ot.orden_fecha)
 JOIN ABAN_DER_ADOS.Camion c
 	on c.camion_codigo = ot.orden_camion
 JOIN ABAN_DER_ADOS.Mecanico mec
@@ -328,6 +354,13 @@ JOIN ABAN_DER_ADOS.MaterialxTarea mxt
 	on mxt.tarea_x_orden = txo.tarea_x_orden_codigo
 JOIN ABAN_DER_ADOS.Material mt
 	on mxt.material_codigo = mt.material_codigo
+JOIN ABAN_DER_ADOS.bi_fecha ftip
+	on ftip.anio = YEAR(tarea_x_orden_fecha_inicio_planificada)  AND ftip.cuatrimestre=datepart(QUARTER,tarea_x_orden_fecha_inicio_planificada)
+JOIN ABAN_DER_ADOS.bi_fecha fti
+	on fti.anio = YEAR(tarea_x_orden_fecha_inicio) AND fti.cuatrimestre=datepart(QUARTER,tarea_x_orden_fecha_inicio)
+JOIN ABAN_DER_ADOS.bi_fecha ftf
+	on ftf.anio = YEAR(tarea_x_orden_fecha_fin) AND ftf.cuatrimestre=datepart(QUARTER,tarea_x_orden_fecha_fin)
+
 
 /************************************/
 /*			HECHO VIAJE				*/
@@ -338,7 +371,8 @@ CREATE TABLE ABAN_DER_ADOS.BI_HECHO_VIAJE
 	viaje_recorrido Integer FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_recorrido,
 	viaje_chofer VARCHAR(50) FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_chofer,
 	viaje_camion int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_camion,
-	viaje_fecha int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_fecha,
+	viaje_fecha_inicio int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_fecha,
+	viaje_fecha_final int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_fecha,
 	viaje_marca int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_marca,
 	viaje_modelo int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_modelo,
 	viaje_paquete int FOREIGN KEY REFERENCES ABAN_DER_ADOS.BI_paquete,
@@ -353,7 +387,8 @@ INSERT INTO ABAN_DER_ADOS.BI_HECHO_VIAJE
 (	viaje_recorrido ,
 	viaje_chofer ,
 	viaje_camion ,
-	viaje_fecha ,
+	viaje_fecha_inicio ,
+	viaje_fecha_final ,
 	viaje_marca ,
 	viaje_modelo,
 	viaje_paquete ,
@@ -363,12 +398,14 @@ INSERT INTO ABAN_DER_ADOS.BI_HECHO_VIAJE
 	viaje_subtotal_paquete,
 	viaje_subtotal_recorrido
 	)
-SELECT v.viaje_recorrido,v.viaje_chofer,v.viaje_camion,f.fecha_id,c.camion_marca,c.camion_modelo,pv.paquete_codigo,pv.paquete_cantidad,DATEDIFF(DAY,v.viaje_fecha_inicio,v.viaje_fecha_fin),v.viaje_litros_combustible,p.paquete_precio*pv.paquete_cantidad,r.recorrido_precio*pv.paquete_cantidad
+SELECT v.viaje_recorrido,v.viaje_chofer,v.viaje_camion,fi.fecha_id,fd.fecha_id,c.camion_marca,c.camion_modelo,pv.paquete_codigo,pv.paquete_cantidad,DATEDIFF(DAY,v.viaje_fecha_inicio,v.viaje_fecha_fin),v.viaje_litros_combustible,p.paquete_precio*pv.paquete_cantidad,r.recorrido_precio*pv.paquete_cantidad
   FROM ABAN_DER_ADOS.Viaje v
 JOIN ABAN_DER_ADOS.Recorrido r
 	ON v.viaje_recorrido = r.recorrido_codigo
-JOIN ABAN_DER_ADOS.bi_fecha f
-	on f.anio = YEAR(v.viaje_fecha_inicio) and f.cuatrimestre = DATEPART(QUARTER,v.viaje_fecha_inicio) --AMBIGUO ACLARARLO EN ESTRATEGIA ¿Fecha inicio o fin?
+JOIN ABAN_DER_ADOS.bi_fecha fi
+	on fi.anio = YEAR(v.viaje_fecha_inicio) and fi.cuatrimestre = DATEPART(QUARTER,v.viaje_fecha_inicio)
+JOIN ABAN_DER_ADOS.bi_fecha fd
+	on fd.anio = YEAR(v.viaje_fecha_fin) and fd.cuatrimestre = DATEPART(QUARTER,v.viaje_fecha_fin)
 JOIN ABAN_DER_ADOS.Camion c
 	ON v.viaje_camion = c.camion_codigo
 JOIN ABAN_DER_ADOS.PaquetexViaje pv
@@ -386,6 +423,7 @@ Máximo tiempo fuera de servicio de cada camión por cuatrimestre
 Se entiende por fuera de servicio cuando el camión está en el taller (tiene 
 una OT) y no se encuentra disponible para un viaje. 
 */
+
 CREATE VIEW V_maximo_tiempo_fuera_de_servicio
 AS
 SELECT 
@@ -395,7 +433,7 @@ SELECT
 	,max(ot.ot_tarea_duracion) 'Maxima cantidad de dias fuera de servicio' 
 FROM ABAN_DER_ADOS.BI_HECHO_OT ot
 JOIN ABAN_DER_ADOS.bi_fecha f
-	ON f.fecha_id = ot.ot_fecha
+	ON f.fecha_id = ot.ot_fecha_orden
 JOIN ABAN_DER_ADOS.BI_Camion c
 	ON c.camion_codigo = ot.ot_camion
 GROUP BY f.anio,f.cuatrimestre,c.camion_patente
@@ -418,13 +456,14 @@ SELECT
 	,f.anio 'ANIO'
 	,f.cuatrimestre 'CUATRIMESTRE'
 	,tt.tipo_tarea_nombre 'TIPO TAREA'
-	,sum(mec.mecanico_costo_hora*8*hot.ot_tarea_duracion)+sum(material_precio*hot.ot_cantidad_material) 'COSTO' FROM ABAN_DER_ADOS.BI_HECHO_OT hot
+	,sum(mec.mecanico_costo_hora*8*hot.ot_tarea_duracion)+sum(material_precio*hot.ot_cantidad_material) 'COSTO'
+FROM ABAN_DER_ADOS.BI_HECHO_OT hot
 JOIN ABAN_DER_ADOS.BI_Camion c
 	ON c.camion_codigo = hot.ot_camion
 JOIN ABAN_DER_ADOS.BI_taller t
 	ON t.taller_codigo= hot.ot_taller
 JOIN ABAN_DER_ADOS.bi_fecha f
-	ON hot.ot_fecha = f.fecha_id
+	ON hot.ot_fecha_orden = f.fecha_id
 JOIN ABAN_DER_ADOS.BI_tipo_tarea tt
 	ON hot.ot_tipo_tarea = tt.tipo_tarea_codigo
 JOIN ABAN_DER_ADOS.BI_mecanico mec
@@ -434,20 +473,25 @@ JOIN ABAN_DER_ADOS.BI_material mt
 GROUP BY c.camion_patente,t.taller_nombre,f.anio,f.cuatrimestre,tt.tipo_tarea_nombre
 GO
 
-
 /*
 Desvío promedio de cada tarea x taller. 
+El desvío se refiere a la diferencia entre la planificación y la ejecución de cada tarea. 
+Pueden tomar como desvío la diferencia entre fechas o la diferencia entre tiempos
 */
 CREATE VIEW V_desvio_promedio
 AS
-SELECT 
-	SUM(DATEDIFF(DAY,ot.ot_fecha_planificada,ot.ot_fecha_inicio))/COUNT(ot_nro_orden)'desvio'
+SELECT DISTINCT 
+	SUM(ot_dias_retraso_inicio)/COUNT(ot_nro_orden)'desvio'
 	,t.taller_nombre 'TALLER'
 FROM ABAN_DER_ADOS.BI_HECHO_OT ot
 JOIN ABAN_DER_ADOS.BI_taller t
 	ON t.taller_codigo = ot.ot_taller
 GROUP BY ot.ot_nro_orden,t.taller_nombre
 GO
+
+
+
+
 
 /*
 Las 5 tareas que más se realizan por modelo de camión.
@@ -473,21 +517,20 @@ GO
 		
 
 
-
 /*
 Los 10 materiales más utilizados por taller
 */
 CREATE VIEW V_diez_materiales_mas_utilizados_x_taller
 AS
-SELECT DISTINCT t.taller_nombre,m.material_descripcion FROM ABAN_DER_ADOS.BI_HECHO_OT ot
-JOIN ABAN_DER_ADOS.BI_taller t
-	ON ot.ot_taller = t.taller_codigo
-JOIN ABAN_DER_ADOS.BI_material m
-	ON m.material_codigo = ot.ot_material
+SELECT DISTINCT t.taller_nombre 'taller',m.material_descripcion 'material' FROM ABAN_DER_ADOS.BI_HECHO_OT ot
+	JOIN ABAN_DER_ADOS.BI_taller t
+		ON t.taller_codigo = ot.ot_taller
+	JOIN ABAN_DER_ADOS.BI_material m
+		ON m.material_codigo = ot.ot_material
 WHERE m.material_codigo IN(
 	SELECT TOP 10 m2.material_codigo FROM ABAN_DER_ADOS.BI_HECHO_OT ot2
 	JOIN ABAN_DER_ADOS.BI_taller t2
-		ON t2.taller_codigo = ot2.ot_nro_orden
+		ON t2.taller_codigo = ot2.ot_taller
 	JOIN ABAN_DER_ADOS.BI_material m2
 		ON m2.material_codigo = ot2.ot_material
 	WHERE t2.taller_codigo=t.taller_codigo
@@ -495,6 +538,11 @@ WHERE m.material_codigo IN(
 	ORDER BY SUM(ot2.ot_cantidad_material) DESC
 )
 GO
+
+
+
+
+
 /*
 Facturación total por recorrido por cuatrimestre. (En función de la cantidad 
 y tipo de paquetes que transporta el camión y el recorrido)
@@ -515,7 +563,7 @@ FROM ABAN_DER_ADOS.BI_HECHO_VIAJE hv
 JOIN ABAN_DER_ADOS.BI_recorrido r
 	ON r.recorrido_codigo = hv.viaje_recorrido
 JOIN ABAN_DER_ADOS.bi_fecha f
-	ON f.fecha_id = hv.viaje_fecha
+	ON f.fecha_id = hv.viaje_fecha_inicio
 JOIN ABAN_DER_ADOS.BI_paquete p
 	ON p.paquete_codigo = hv.viaje_paquete
 GROUP BY  r.recorrido_origen,r.recorrido_destino,f.anio,f.cuatrimestre
@@ -579,15 +627,5 @@ FROM ABAN_DER_ADOS.BI_HECHO_VIAJE hv2
 JOIN ABAN_DER_ADOS.BI_Camion c
 	ON c.camion_codigo = hv2.viaje_camion
 
-
-
-
-
-
-
-
-
-
-
-
-
+SELECT * FROM V_cinco_tareas_mas_realizadas_x_modelo
+ORDER BY 2
